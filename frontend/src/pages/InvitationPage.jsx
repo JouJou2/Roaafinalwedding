@@ -98,7 +98,7 @@ const t = {
 }
 
 // Note: mock data removed — InvitationPage will fetch invite data from local API (/api/invite/:token)
-
+// asdoiajsdjajsdiojaisjdjaisdjoiajsdjajsdiasjdio
 // Derive first name from full name
 const getFirstName = (name) => name.trim().split(' ')[0]
 
@@ -172,7 +172,7 @@ function LanguageSplash({ onSelect }) {
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.97 }}
           >
-            <span className="lang-flag">🇬🇧</span>
+            
             <span className="lang-label">English</span>
           </motion.button>
 
@@ -184,7 +184,7 @@ function LanguageSplash({ onSelect }) {
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.97 }}
           >
-            <span className="lang-flag">🇱🇧</span>
+            
             <span className="lang-label">العربية</span>
           </motion.button>
         </motion.div>
@@ -201,7 +201,8 @@ function LanguageSplash({ onSelect }) {
     </motion.div>
   )
 }
-
+// <span className="lang-flag">🇬🇧</span>
+// <span className="lang-flag">🇱🇧</span>
 // ===== MAIN PAGE =====
 function InvitationPage() {
   const { token } = useParams()
@@ -594,7 +595,7 @@ function InvitationPage() {
         </motion.div>
 
         <motion.div className="scroll-indicator" animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-          <ChevronDown size={24} strokeWidth={1} />
+          <ChevronDown size={25} strokeWidth={1} />
         </motion.div>
       </motion.section>
 
