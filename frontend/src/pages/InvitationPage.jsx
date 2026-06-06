@@ -595,7 +595,7 @@ function InvitationPage() {
         </motion.div>
 
         <motion.div className="scroll-indicator" animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-          <ChevronDown size={40} strokeWidth={1} />
+          <ChevronDown size={60} strokeWidth={5} />
         </motion.div>
       </motion.section>
 
