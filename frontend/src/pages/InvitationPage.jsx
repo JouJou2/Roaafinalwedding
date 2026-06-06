@@ -263,7 +263,10 @@ function InvitationPage() {
       setLoading(false)
     }, 800)
   }, [token])
-
+  useEffect(() => {
+  window.scrollTo(0, 1)
+  setTimeout(() => window.scrollTo(0, 0), 50)
+}, [lang])
   // Attempt to autoplay when language is chosen or when musicPlaying changes
   useEffect(() => {
     const audio = audioRef.current
