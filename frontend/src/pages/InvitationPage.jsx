@@ -528,8 +528,8 @@ function InvitationPage() {
         <img src="/images/3_Watercolor_hand_drawn_olive_branch.png" alt="" />
       </motion.div>
       <motion.div className="olive-branch branch-left-bottom" style={{ y: springY3 }}>
-        <img src="/images/5_Watercolor_Olive_Tree_Images_Browse.png" alt="" />
-      </motion.div>
+  <img src="/images/5_Watercolor_Olive_Tree_Images_Browse.png" alt="" style={{ transform: 'scaleX(-1)' }} />
+</motion.div>
       <motion.div className="olive-branch branch-right-bottom" style={{ y: springY1 }}>
         <img src="/images/4_Watercolor_hand_drawn_green_olive.png" alt="" />
       </motion.div>
