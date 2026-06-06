@@ -38,9 +38,9 @@ const t = {
     loading: 'Preparing your invitation...',
     dear: 'Dear',
     togetherWith: 'Together with our families, we invite you to join us in celebrating our new chapter.',
-    theDate: 'The Date',
-    theVenue: 'The Venue',
-    addToCalendar: 'Add to Calendar',
+    theDate: 'Don\'t Be Late!',
+    theVenue: 'Meet Us Here',
+    addToCalendar: 'Mark Your Calendar',
     ourStory: 'Our Story',
        brideName: 'Abdullah',
        groomName: 'Roaa',
@@ -69,9 +69,9 @@ const t = {
     loading: 'جارٍ تحضير دعوتك...',
     dear: ' عزيزي/عزيزتي',
     togetherWith: ' ندعوكم بحب للاحتفال معنا بـفرحة عمرنا',
-    theDate: 'التاريخ',
-    theVenue: 'المكان',
-    addToCalendar: 'أضف إلى التقويم',
+    theDate: 'ما تتأخر!',
+    theVenue: 'لاقينا هون',
+    addToCalendar: 'فضّي حالك',
     ourStory: 'قصتنا',
     brideName: 'عبدالله',
     groomName: 'رؤى',
@@ -148,7 +148,7 @@ function LanguageSplash({ onSelect }) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.7 }}
         >
-          Choose your language
+          Wedding Invitation
         </motion.p>
 
         <motion.p
@@ -157,7 +157,7 @@ function LanguageSplash({ onSelect }) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9, duration: 0.7 }}
         >
-          اختر لغتك
+          دعوة زفاف
         </motion.p>
 
         <motion.div
