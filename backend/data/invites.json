@@ -1,0 +1,36 @@
+[
+  {
+    "id": 1780774862231,
+    "token": "2e40ff354df4b37d5e0cff38d1e688bb",
+    "name": "sadasdasdas",
+    "nameEn": "sadasdasdas",
+    "nameAr": "asdasd",
+    "firstName": "sadasdasdas",
+    "email": "",
+    "rsvpStatus": null,
+    "rsvpFinalized": false,
+    "plusOneName": "",
+    "opened": false,
+    "createdAt": "2026-06-06T19:41:02.231Z",
+    "allowsPlusOne": true,
+    "customMessage": "We are honored to celebrate with you!",
+    "customMessageAr": " فرحتنا تكبر بكم!"
+  },
+  {
+    "id": 1780775132928,
+    "token": "4b43e98596f748f8873bf808113592f3",
+    "name": "asd",
+    "nameEn": "asd",
+    "nameAr": "asd",
+    "firstName": "asd",
+    "email": "",
+    "rsvpStatus": null,
+    "rsvpFinalized": false,
+    "plusOneName": "",
+    "opened": false,
+    "createdAt": "2026-06-06T19:45:32.928Z",
+    "allowsPlusOne": false,
+    "customMessage": "We are honored to celebrate with you!",
+    "customMessageAr": " فرحتنا تكبر بكم!"
+  }
+]
