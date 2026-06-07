@@ -99,6 +99,7 @@
     const [lastLinkCopied, setLastLinkCopied] = useState(false)
     const [generatedGuests, setGeneratedGuests] = useState([])
     const [newGuestSide, setNewGuestSide] = useState('bride')
+    const [showGeneratedList, setShowGeneratedList] = useState(true)
     
 
     // Fetch invites from backend and merge with locally generated ones
@@ -455,29 +456,37 @@
 
           {displayedGeneratedGuests.length > 0 && (
             <section className="generated-invites">
-              <h3 className="generated-title">Generated Invites</h3>
-              <p className="generated-title" style={{ marginTop: '-6px', marginBottom: '10px' }}>Answered invites appear first.</p>
-              <div className="generated-list">
-                {displayedGeneratedGuests.map((g) => {
-                  const link = `${window.location.origin}/invite/${g.token}`
-                  return (
-                    <div key={g.token} className="generated-item">
-                      <div className="generated-info">
-                        <span className="gen-name">{(g.nameEn || g.name) + (g.nameAr ? ' / ' + g.nameAr : '')}</span>
-                        <span className={`rsvp-badge ${g.rsvpStatus || 'pending'}`} style={{ width: 'fit-content' }}>
-                          {g.rsvpStatus === 'yes' ? 'Yes' : g.rsvpStatus === 'no' ? 'No' : 'Pending'}
-                        </span>
-                        <input className="gen-link-input" type="text" value={link} readOnly />
-                      </div>
-                      <div className="generated-actions">
-                        <button className="gen-copy" onClick={() => { const l = copyLink(g.token); setLastGeneratedLink(l); setLastGeneratedGuestName(g.name) }}>Copy</button>
-                        <button className="gen-delete" onClick={() => deleteGeneratedGuest(g.token)}>Delete</button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+    <h3 className="generated-title" style={{ margin: 0 }}>Generated Invites</h3>
+    <button className="toggle-list-btn" onClick={() => setShowGeneratedList(!showGeneratedList)}>
+      {showGeneratedList ? 'Hide Links' : 'Show Links'}
+    </button>
+  </div>
+  <p className="generated-title" style={{ marginTop: '0', marginBottom: '10px' }}>Answered invites appear first.</p>
+              
+              {showGeneratedList && (
+  <div className="generated-list">
+    {displayedGeneratedGuests.map((g) => {
+      const link = `${window.location.origin}/invite/${g.token}`
+      return (
+        <div key={g.token} className="generated-item">
+          <div className="generated-info">
+            <span className="gen-name">{(g.nameEn || g.name) + (g.nameAr ? ' / ' + g.nameAr : '')}</span>
+            <span className={`rsvp-badge ${g.rsvpStatus || 'pending'}`} style={{ width: 'fit-content' }}>
+              {g.rsvpStatus === 'yes' ? 'Yes' : g.rsvpStatus === 'no' ? 'No' : 'Pending'}
+            </span>
+            <input className="gen-link-input" type="text" value={link} readOnly />
+          </div>
+          <div className="generated-actions">
+            <button className="gen-copy" onClick={() => { const l = copyLink(g.token); setLastGeneratedLink(l); setLastGeneratedGuestName(g.name) }}>Copy</button>
+            <button className="gen-delete" onClick={() => deleteGeneratedGuest(g.token)}>Delete</button>
+          </div>
+        </div>
+      )
+    })}
+  </div>
+)}
+              </section>
           )}
 
           <div className="filters-bar">
@@ -624,7 +633,7 @@
                     </label>
                   </div>
                 </div>
-                <div className="form-field">
+                <div className="form-field" style={{ marginTop: '20px' }}>
   <label>Side</label>
   <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
     <button

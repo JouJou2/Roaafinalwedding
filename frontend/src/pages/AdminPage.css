@@ -94,6 +94,21 @@
   border-color: var(--olive-pale);
   box-shadow: 0 0 0 3px rgba(181, 196, 154, 0.2);
 }
+.toggle-list-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--olive-pale);
+  background: transparent;
+  color: var(--olive-medium);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-list-btn:hover {
+  background: var(--olive-wash);
+}
 
 .toggle-password {
   position: absolute;
