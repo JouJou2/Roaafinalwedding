@@ -68,7 +68,7 @@ const createGuestRecord = (nameEn = '', nameAr = '', allowsPlusOne = false) => {
     opened: false,
     rsvpDate: null,
     allowsPlusOne: !!allowsPlusOne,
-    customMessage: 'We are honored to celebrate with you!',
+    customMessage: 'are honored to celebrate with you!',
     customMessageAr: 'يسعدنا كثيراً أن نحتفل معك!',
   }
 }
