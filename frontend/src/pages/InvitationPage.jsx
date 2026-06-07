@@ -216,6 +216,7 @@ function InvitationPage() {
   const [submitted, setSubmitted] = useState(false)
   const [musicPlaying, setMusicPlaying] = useState(true)
   const [toast, setToast] = useState(null)
+  const [showPlusOneNotice, setShowPlusOneNotice] = useState(false)
   const [giftModal, setGiftModal] = useState(null)
   const audioRef = useRef(null)
 
@@ -446,6 +447,9 @@ function InvitationPage() {
     window.open(url, '_blank')
   }
   const triggerCelebration = () => {
+    if (allowsPlusOne) {
+  setTimeout(() => setShowPlusOneNotice(true), 1200)
+}
   const container = document.createElement('div')
   container.style.cssText = `
     position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
@@ -642,17 +646,31 @@ function InvitationPage() {
       </motion.section>
 
       <AnimatePresence>
-        {toast && (
-          <motion.div
-            className={`invite-toast ${toast.type}`}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
+  {toast && (
+    <motion.div
+      className={`invite-toast ${toast.type}`}
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+    >
+      {toast.message}
+    </motion.div>
+  )}
+  {showPlusOneNotice && (
+    <motion.div
+      className="plus-one-notice"
+      initial={{ opacity: 0, scale: 0.85, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+      onClick={() => setShowPlusOneNotice(false)}
+    >
+      <span className="plus-one-notice-icon">🌿</span>
+      <p>You're welcome to bring a guest!</p>
+      <p className="plus-one-notice-sub">Scroll down to add your plus one</p>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* Date & Venue */}
       <section className="date-venue-section">

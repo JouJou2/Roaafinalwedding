@@ -192,7 +192,46 @@
   cursor: pointer;
   opacity: 1;
 }
+.plus-one-notice {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1.5px solid #b5c49a;
+  border-radius: 16px;
+  padding: 16px 24px;
+  text-align: center;
+  z-index: 999;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(107, 127, 78, 0.18);
+  min-width: 240px;
+}
 
+.plus-one-notice p {
+  margin: 4px 0 0;
+  color: #3a4a2e;
+  font-size: 0.95rem;
+}
+
+.plus-one-notice-sub {
+  font-size: 0.78rem !important;
+  color: #9aad78 !important;
+}
+
+.plus-one-notice-icon {
+  font-size: 1.4rem;
+}
+
+/* Pulsing plus one button */
+.add-plus-one-btn {
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(107, 127, 78, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(107, 127, 78, 0); }
+}
 /* ===== DATE & VENUE SECTION ===== */
 .date-venue-section {
   position: relative;
