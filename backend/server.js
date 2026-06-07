@@ -53,7 +53,7 @@ app.post('/api/invite', (req, res) => {
     opened: false,
     createdAt: new Date().toISOString(),
     allowsPlusOne: !!allowsPlusOne,
-    customMessage: 'We are honored to celebrate with you!',
+    customMessage: 'are honored to celebrate with you!',
     customMessageAr: ' فرحتنا تكبر بكم!',
   }
 
