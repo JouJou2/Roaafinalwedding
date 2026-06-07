@@ -954,7 +954,7 @@ function InvitationPage() {
             <img src="/images/whishlogo.jpg" alt="Whish" className="modal-logo" />
             <h3 className="modal-title">Whish Money</h3>
             <p className="modal-label">Send to this number</p>
-            <div className="modal-value">+961 78 822 178</div>
+            <div className="modal-value" dir="ltr">+961 78 822 178</div>
             <p className="modal-note">Copy the number and open your Whish app</p>
           </>
         ) : (
