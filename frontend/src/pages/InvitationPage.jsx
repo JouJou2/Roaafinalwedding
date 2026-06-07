@@ -736,13 +736,13 @@ function InvitationPage() {
     background: `linear-gradient(135deg, ${['#c8d4b0', '#9aad78', '#6b8a52'][index]} 0%, ${['#7a9458', '#527a3e', '#3d6030'][index]} 100%)`
   }} />
   <img
-    src={`/images/story-${index + 1}.jpg`}
-    alt={item.title}
-    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-    onError={(e) => {
-      e.currentTarget.style.display = 'none'
-    }}
-  />
+  src={`/images/story-${index + 1}.${index === 2 ? 'jpg' : 'jpeg'}`}
+  alt={item.title}
+  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+  onError={(e) => {
+    e.currentTarget.style.display = 'none'
+  }}
+/>
 </div>
 
                 {/* Overlay fades + slides up into view */}
