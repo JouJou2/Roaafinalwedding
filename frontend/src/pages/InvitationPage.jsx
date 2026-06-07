@@ -299,6 +299,7 @@ function InvitationPage() {
     setShowDeclineConfirm(false)
 
     // Keep the RSVP open if this guest can add a plus one.
+    triggerCelebration()
     submitRSVP('yes', '', allowsPlusOne ? false : true)
   }
 
@@ -444,7 +445,48 @@ function InvitationPage() {
 
     window.open(url, '_blank')
   }
+  const triggerCelebration = () => {
+  const container = document.createElement('div')
+  container.style.cssText = `
+    position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
+  `
+  document.body.appendChild(container)
 
+  const colors = ['#6b7f4e', '#8b9d6e', '#b5c49a', '#d4dcc4', '#c8b89a', '#e8dfd0']
+  const symbols = ['✦', '·', '◦', '❋', '✿', '○']
+
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div')
+    const color = colors[Math.floor(Math.random() * colors.length)]
+    const symbol = symbols[Math.floor(Math.random() * symbols.length)]
+    const left = Math.random() * 100
+    const duration = 1.5 + Math.random() * 2
+    const delay = Math.random() * 0.8
+    const size = 10 + Math.random() * 16
+
+    el.innerText = symbol
+    el.style.cssText = `
+      position: absolute;
+      left: ${left}%;
+      top: -20px;
+      color: ${color};
+      font-size: ${size}px;
+      opacity: 0;
+      animation: fall ${duration}s ease-in ${delay}s forwards;
+    `
+    container.appendChild(el)
+  }
+
+  const style = document.createElement('style')
+  style.innerText = `
+    @keyframes fall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+  `
+  document.head.appendChild(style)
+  setTimeout(() => { container.remove(); style.remove() }, 4000)
+}
   const addToPhoneCalendar = () => {
     const ua = navigator.userAgent || navigator.vendor || window.opera
     const isAndroid = /android/i.test(ua)
