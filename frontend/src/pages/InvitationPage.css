@@ -194,44 +194,31 @@
 }
 .plus-one-notice {
   position: fixed;
-  bottom: 32px;
+  bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
-  background: #fff;
-  border: 1.5px solid #b5c49a;
-  border-radius: 16px;
-  padding: 16px 24px;
+  background: linear-gradient(135deg, #fdfcf8 0%, #f5f2eb 100%);
+  border: 1px solid #c8d4b0;
+  border-radius: 20px;
+  padding: 20px 32px;
   text-align: center;
   z-index: 999;
   cursor: pointer;
-  box-shadow: 0 8px 32px rgba(107, 127, 78, 0.18);
-  min-width: 240px;
+  box-shadow: 0 12px 40px rgba(107, 127, 78, 0.15), 0 2px 8px rgba(0,0,0,0.06);
+  min-width: 280px;
+  max-width: 320px;
+  white-space: nowrap;
+}
+img {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  pointer-events: none;
+}
+.gift-card img {
+  pointer-events: none;
 }
 
-.plus-one-notice p {
-  margin: 4px 0 0;
-  color: #3a4a2e;
-  font-size: 0.95rem;
-}
-
-.plus-one-notice-sub {
-  font-size: 0.78rem !important;
-  color: #9aad78 !important;
-}
-
-.plus-one-notice-icon {
-  font-size: 1.4rem;
-}
-
-/* Pulsing plus one button */
-.add-plus-one-btn {
-  animation: pulse-green 2s ease-in-out infinite;
-}
-
-@keyframes pulse-green {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(107, 127, 78, 0.4); }
-  50% { box-shadow: 0 0 0 10px rgba(107, 127, 78, 0); }
-}
 /* ===== DATE & VENUE SECTION ===== */
 .date-venue-section {
   position: relative;
@@ -815,6 +802,7 @@
 
 .gift-card {
   position: relative;
+  pointer-events: all;
   z-index: 10;
   width: 140px;
   height: 140px;
