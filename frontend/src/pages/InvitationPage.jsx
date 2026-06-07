@@ -731,27 +731,19 @@ function InvitationPage() {
             {tr.timeline.map((item, index) => (
               <div key={item.year} className="timeline-item">
                 {/* Full-bleed background image / placeholder */}
-                <div className="timeline-photo">
-                  <img
-                    src={`/images/story-${index + 1}.jpg`}
-                    alt={item.title}
-                    onError={(e) => {
-                      const el = e.currentTarget
-                      const attempts = el.dataset.attempt ? Number(el.dataset.attempt) : 0
-                      const exts = ['jpg', 'jpeg', 'png', 'webp']
-                      if (attempts < exts.length - 1) {
-                        const next = attempts + 1
-                        el.dataset.attempt = String(next)
-                        el.src = `/images/story-${index + 1}.${exts[next]}`
-                      } else {
-                        el.style.display = 'none'
-                      }
-                    }}
-                  />
-                  <div className="photo-placeholder" style={{
-                    background: `linear-gradient(135deg, ${['#c8d4b0', '#9aad78', '#6b8a52'][index]} 0%, ${['#7a9458', '#527a3e', '#3d6030'][index]} 100%)`
-                  }} />
-                </div>
+<div className="timeline-photo">
+  <div className="photo-placeholder" style={{
+    background: `linear-gradient(135deg, ${['#c8d4b0', '#9aad78', '#6b8a52'][index]} 0%, ${['#7a9458', '#527a3e', '#3d6030'][index]} 100%)`
+  }} />
+  <img
+    src={`/images/story-${index + 1}.jpg`}
+    alt={item.title}
+    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+    onError={(e) => {
+      e.currentTarget.style.display = 'none'
+    }}
+  />
+</div>
 
                 {/* Overlay fades + slides up into view */}
                 <motion.div
