@@ -85,7 +85,7 @@ const t = {
     confirmRsvp: 'تأكيد الحضور',
     confirmSolo: 'تأكيد الحضور منفرداً',
     confirmAttendance: 'تأكيد الحضور',
-    thankYou: 'شكراً لك!',
+    thankYou: 'شكراً لك',
     cantWait: (plusOne) => `لا يسعنا الانتظار للاحتفال معك${plusOne ? ' ومع ' + plusOne : ''}!`,
     understand: 'نتفهم ذلك ونقدر إخبارنا.',
     withLove: '  بكل محبة، عبدالله  ورؤى ',
