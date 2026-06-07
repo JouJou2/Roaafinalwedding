@@ -666,9 +666,10 @@ function InvitationPage() {
     onClick={() => setShowPlusOneNotice(false)}
   >
     <div className="plus-one-notice">
-      <span className="plus-one-notice-icon">🌿</span>
-      <p>You're welcome to bring a guest!</p>
-      <p className="plus-one-notice-sub">Scroll down to add your plus one</p>
+      <img src="/images/1_Watercolor_banner_with_green_olive.png" alt="" className="plus-one-notice-bg" />
+      <p className="plus-one-notice-en">Feel free to bring your partner or spouse along</p>
+      <p className="plus-one-notice-ar">يسعدنا أن تحضر برفقة شريك حياتك</p>
+      <p className="plus-one-notice-sub">Tap to dismiss · اضغط للإغلاق</p>
     </div>
   </motion.div>
 )}
