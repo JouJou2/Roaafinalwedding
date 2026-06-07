@@ -664,7 +664,7 @@ const payload = {
   opened: false,
   createdAt: new Date().toISOString(),
   allowsPlusOne: !!newGuestAllowsPlusOne,
-  customMessage: 'We are honored to celebrate with you!',
+  customMessage: 'are honored to celebrate with you!',
   customMessageAr: 'فرحتنا تكبر بكم!',
 }
                     try {
