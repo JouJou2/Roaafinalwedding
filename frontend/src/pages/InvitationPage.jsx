@@ -687,12 +687,12 @@ function InvitationPage() {
           <div className="date-block">
             <p className="section-label">{tr.theDate}</p>
             <h2 className="date-display">
-              {weddingDate.toLocaleDateString(isRTL ? 'ar-TN' : 'en-US', {
+              {weddingDate.toLocaleDateString(isRTL ? 'ar-LB' : 'en-US', {
                 weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
               })}
             </h2>
             <p className="time-display">
-              {weddingDate.toLocaleTimeString(isRTL ? 'ar-TN' : 'en-US', {
+              {weddingDate.toLocaleTimeString(isRTL ? 'ar-LB' : 'en-US', {
                 hour: 'numeric', minute: '2-digit'
               })}
             </p>
