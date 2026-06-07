@@ -657,19 +657,21 @@ function InvitationPage() {
     </motion.div>
   )}
   {showPlusOneNotice && (
-    <motion.div
-      className="plus-one-notice"
-      initial={{ opacity: 0, scale: 0.85, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-      onClick={() => setShowPlusOneNotice(false)}
-    >
+  <motion.div
+    className="plus-one-notice-wrapper"
+    initial={{ opacity: 0, scale: 0.85, y: 20 }}
+    animate={{ opacity: 1, scale: 1, y: 0 }}
+    exit={{ opacity: 0, scale: 0.9 }}
+    transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+    onClick={() => setShowPlusOneNotice(false)}
+  >
+    <div className="plus-one-notice">
       <span className="plus-one-notice-icon">🌿</span>
       <p>You're welcome to bring a guest!</p>
       <p className="plus-one-notice-sub">Scroll down to add your plus one</p>
-    </motion.div>
-  )}
+    </div>
+  </motion.div>
+)}
 </AnimatePresence>
 
       {/* Date & Venue */}
