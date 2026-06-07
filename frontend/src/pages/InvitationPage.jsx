@@ -668,7 +668,7 @@ function InvitationPage() {
     <div className="plus-one-notice">
       <img src="/images/1_Watercolor_banner_with_green_olive.png" alt="" className="plus-one-notice-bg" />
       <p className="plus-one-notice-en">Feel free to bring your partner or spouse along</p>
-      <p className="plus-one-notice-ar">يسعدنا أن تحضر برفقة شريك حياتك</p>
+      <p className="plus-one-notice-ar">يسعدنا أن تحضر برفقة شريكك </p>
       <p className="plus-one-notice-sub">Tap to dismiss · اضغط للإغلاق</p>
     </div>
   </motion.div>
