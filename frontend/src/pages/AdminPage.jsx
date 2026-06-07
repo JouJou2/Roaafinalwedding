@@ -98,6 +98,7 @@
     const [lastGeneratedGuestName, setLastGeneratedGuestName] = useState('')
     const [lastLinkCopied, setLastLinkCopied] = useState(false)
     const [generatedGuests, setGeneratedGuests] = useState([])
+    const [newGuestSide, setNewGuestSide] = useState('bride')
     
 
     // Fetch invites from backend and merge with locally generated ones
@@ -230,9 +231,11 @@
         const emailVal = (guest.email || '').toLowerCase()
         const matchesSearch = nameVal.includes(searchTerm.toLowerCase()) || emailVal.includes(searchTerm.toLowerCase())
         const matchesFilter = filterStatus === 'all' || 
-                            (filterStatus === 'yes' && guest.rsvpStatus === 'yes') ||
-                            (filterStatus === 'no' && guest.rsvpStatus === 'no') ||
-                            (filterStatus === 'pending' && guest.rsvpStatus === null)
+  (filterStatus === 'yes' && guest.rsvpStatus === 'yes') ||
+  (filterStatus === 'no' && guest.rsvpStatus === 'no') ||
+  (filterStatus === 'pending' && guest.rsvpStatus === null) ||
+  (filterStatus === 'bride' && guest.side === 'bride') ||
+  (filterStatus === 'groom' && guest.side === 'groom')
         return matchesSearch && matchesFilter
         })
     }
@@ -489,31 +492,13 @@
             </div>
 
             <div className="filter-tabs">
-              <button 
-                className={filterStatus === 'all' ? 'active' : ''}
-                onClick={() => setFilterStatus('all')}
-              >
-                All
-              </button>
-              <button 
-                className={filterStatus === 'yes' ? 'active' : ''}
-                onClick={() => setFilterStatus('yes')}
-              >
-                Yes
-              </button>
-              <button 
-                className={filterStatus === 'no' ? 'active' : ''}
-                onClick={() => setFilterStatus('no')}
-              >
-                No
-              </button>
-              <button 
-                className={filterStatus === 'pending' ? 'active' : ''}
-                onClick={() => setFilterStatus('pending')}
-              >
-                Pending
-              </button>
-            </div>
+  <button className={filterStatus === 'all' ? 'active' : ''} onClick={() => setFilterStatus('all')}>All</button>
+  <button className={filterStatus === 'yes' ? 'active' : ''} onClick={() => setFilterStatus('yes')}>Yes</button>
+  <button className={filterStatus === 'no' ? 'active' : ''} onClick={() => setFilterStatus('no')}>No</button>
+  <button className={filterStatus === 'pending' ? 'active' : ''} onClick={() => setFilterStatus('pending')}>Pending</button>
+  <button className={filterStatus === 'bride' ? 'active' : ''} onClick={() => setFilterStatus('bride')}>Bride's Side</button>
+  <button className={filterStatus === 'groom' ? 'active' : ''} onClick={() => setFilterStatus('groom')}>Groom's Side</button>
+</div>
           </div>
 
           <div className="guest-table-container">
@@ -639,6 +624,25 @@
                     </label>
                   </div>
                 </div>
+                <div className="form-field">
+  <label>Side</label>
+  <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+    <button
+      type="button"
+      className={`side-btn ${newGuestSide === 'bride' ? 'active' : ''}`}
+      onClick={() => setNewGuestSide('bride')}
+    >
+      Bride's Side
+    </button>
+    <button
+      type="button"
+      className={`side-btn ${newGuestSide === 'groom' ? 'active' : ''}`}
+      onClick={() => setNewGuestSide('groom')}
+    >
+      Groom's Side
+    </button>
+  </div>
+</div>
 
                 <div className="modal-actions">
                   <button 
@@ -663,6 +667,7 @@
     rsvpStatus: null,
     rsvpFinalized: false,
     plusOneName: '',
+    side: newGuestSide,
     opened: false,
     createdAt: new Date().toISOString(),
     allowsPlusOne: !!newGuestAllowsPlusOne,

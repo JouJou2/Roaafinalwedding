@@ -18,7 +18,24 @@
   width: 100%;
   text-align: center;
 }
+.side-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--olive-pale);
+  background: transparent;
+  color: var(--olive-medium);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
+.side-btn.active {
+  background: var(--olive-medium);
+  color: white;
+  border-color: var(--olive-medium);
+}
 .login-olive-decoration {
   margin-bottom: 24px;
   opacity: 0.6;
