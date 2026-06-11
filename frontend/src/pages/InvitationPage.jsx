@@ -218,6 +218,7 @@ function InvitationPage() {
   const [toast, setToast] = useState(null)
   const [showPlusOneNotice, setShowPlusOneNotice] = useState(false)
   const [giftModal, setGiftModal] = useState(null)
+  const [showScrollHint, setShowScrollHint] = useState(false)
   const audioRef = useRef(null)
 
   const containerRef = useRef(null)
@@ -265,9 +266,13 @@ function InvitationPage() {
       setLoading(false)
     }, 800)
   }, [token])
-  useEffect(() => {
+ useEffect(() => {
   window.scrollTo(0, 1)
   setTimeout(() => window.scrollTo(0, 0), 50)
+  if (lang !== null) {
+    setTimeout(() => setShowScrollHint(true), 2000)
+    setTimeout(() => setShowScrollHint(false), 6000)
+  }
 }, [lang])
   // Attempt to autoplay when language is chosen or when musicPlaying changes
   useEffect(() => {
@@ -646,6 +651,32 @@ function InvitationPage() {
       </motion.section>
 
       <AnimatePresence>
+        {showScrollHint && (
+  <>
+    <motion.div
+      className="scroll-hint-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={() => setShowScrollHint(false)}
+    />
+    <motion.div
+      className="plus-one-notice-wrapper"
+      initial={{ opacity: 0, scale: 0.85, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+      onClick={() => setShowScrollHint(false)}
+    >
+      <div className="plus-one-notice">
+        <img src="/images/1_Watercolor_banner_with_green_olive.png" alt="" className="plus-one-notice-bg" />
+        <p className="plus-one-notice-en">Scroll down to explore your invitation</p>
+        <p className="plus-one-notice-ar">مرّر للأسفل لاستعراض دعوتك</p>
+        <p className="plus-one-notice-sub">Tap to dismiss · اضغط للإغلاق</p>
+      </div>
+    </motion.div>
+  </>
+)}
   {toast && (
     <motion.div
       className={`invite-toast ${toast.type}`}
@@ -672,6 +703,7 @@ function InvitationPage() {
       <p className="plus-one-notice-sub">Tap to dismiss · اضغط للإغلاق</p>
     </div>
   </motion.div>
+  
 )}
 </AnimatePresence>
 

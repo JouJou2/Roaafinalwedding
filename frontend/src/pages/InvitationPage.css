@@ -245,13 +245,16 @@
 }
 .plus-one-notice-wrapper {
   position: fixed;
-  bottom: 40px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  z-index: 1000;
+}
+.scroll-hint-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
   z-index: 999;
-  pointer-events: none;
 }
 img {
   -webkit-user-select: none;

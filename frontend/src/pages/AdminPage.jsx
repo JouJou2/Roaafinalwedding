@@ -86,6 +86,7 @@
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [loginError, setLoginError] = useState('')
+    const [newGuestInviteType, setNewGuestInviteType] = useState('real')
     const [guests, setGuests] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
@@ -236,19 +237,20 @@
   (filterStatus === 'no' && guest.rsvpStatus === 'no') ||
   (filterStatus === 'pending' && guest.rsvpStatus === null) ||
   (filterStatus === 'bride' && guest.side === 'bride') ||
-  (filterStatus === 'groom' && guest.side === 'groom')
+  (filterStatus === 'groom' && guest.side === 'groom') ||
+  (filterStatus === 'gesture' && guest.inviteType === 'gesture')
         return matchesSearch && matchesFilter
         })
     }
 
     const stats = {
-      total: guests.length,
-      yes: guests.filter(g => g.rsvpStatus === 'yes').length,
-      no: guests.filter(g => g.rsvpStatus === 'no').length,
-      pending: guests.filter(g => g.rsvpStatus === null).length,
-      totalAttending: guests.filter(g => g.rsvpStatus === 'yes').length + 
-                      guests.filter(g => g.rsvpStatus === 'yes' && g.plusOneName).length,
-    }
+  total: guests.filter(g => g.inviteType !== 'gesture').length,
+  yes: guests.filter(g => g.rsvpStatus === 'yes' && g.inviteType !== 'gesture').length,
+  no: guests.filter(g => g.rsvpStatus === 'no' && g.inviteType !== 'gesture').length,
+  pending: guests.filter(g => g.rsvpStatus === null && g.inviteType !== 'gesture').length,
+  totalAttending: guests.filter(g => g.rsvpStatus === 'yes' && g.inviteType !== 'gesture').length +
+    guests.filter(g => g.rsvpStatus === 'yes' && g.plusOneName && g.inviteType !== 'gesture').length,
+}
 
     const filteredGuests = getFilteredGuests()
     const displayedGeneratedGuests = guests.filter(g => {
@@ -507,6 +509,7 @@
   <button className={filterStatus === 'pending' ? 'active' : ''} onClick={() => setFilterStatus('pending')}>Pending</button>
   <button className={filterStatus === 'bride' ? 'active' : ''} onClick={() => setFilterStatus('bride')}>Bride's Side</button>
   <button className={filterStatus === 'groom' ? 'active' : ''} onClick={() => setFilterStatus('groom')}>Groom's Side</button>
+  <button className={filterStatus === 'gesture' ? 'active' : ''} onClick={() => setFilterStatus('gesture')}>Gesture</button>
 </div>
           </div>
 
@@ -518,6 +521,7 @@
                   <th>RSVP</th>
                   <th>Plus One</th>
                   <th>Link</th>
+                  <th>Type</th>
                   <th>Opened</th>
                 </tr>
               </thead>
@@ -553,6 +557,19 @@
   ) : (
     <span className="no-plus-one">—</span>
   )}
+</td>
+<td>
+  <button
+    className={`side-btn ${guest.inviteType === 'gesture' ? 'active' : ''}`}
+    style={{ fontSize: '12px', padding: '4px 8px' }}
+    onClick={async () => {
+      const newType = guest.inviteType === 'gesture' ? 'real' : 'gesture'
+      await supabase.from('guests').update({ inviteType: newType }).eq('token', guest.token)
+      setGuests(prev => prev.map(g => g.token === guest.token ? { ...g, inviteType: newType } : g))
+    }}
+  >
+    {guest.inviteType === 'gesture' ? 'Gesture' : 'Real'}
+  </button>
 </td>
                       <td>
                         <button
@@ -652,6 +669,25 @@
     </button>
   </div>
 </div>
+<div className="form-field" style={{ marginTop: '20px' }}>
+  <label>Invite Type</label>
+  <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+    <button
+      type="button"
+      className={`side-btn ${newGuestInviteType === 'real' ? 'active' : ''}`}
+      onClick={() => setNewGuestInviteType('real')}
+    >
+      Real
+    </button>
+    <button
+      type="button"
+      className={`side-btn ${newGuestInviteType === 'gesture' ? 'active' : ''}`}
+      onClick={() => setNewGuestInviteType('gesture')}
+    >
+      Gesture
+    </button>
+  </div>
+</div>
 
                 <div className="modal-actions">
                   <button 
@@ -673,6 +709,7 @@
     nameAr: newGuestNameAr.trim(),
     firstName: newGuestNameEn.trim() || newGuestNameAr.trim(),
     email: '',
+    inviteType: newGuestInviteType,
     rsvpStatus: null,
     rsvpFinalized: false,
     plusOneName: '',
@@ -704,6 +741,7 @@
     setTimeout(() => setLastLinkCopied(false), 2000)
     setNewGuestNameEn('')
     setNewGuestNameAr('')
+    setNewGuestInviteType('real')
     setShowAddModal(false)
   } catch (err) {
     console.error(err)
