@@ -1,0 +1,236 @@
+.seating-page {
+  min-height: 100vh;
+  background: var(--warm-white, #fdfcf8);
+  padding: 0 0 80px;
+}
+
+.seating-page-header {
+  text-align: center;
+  padding: 60px 24px 32px;
+  position: relative;
+}
+
+.seating-page-olive {
+  width: 240px;
+  opacity: 0.45;
+  margin-bottom: 20px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.seating-page-title {
+  font-family: 'Great Vibes', cursive;
+  font-size: 3.5rem;
+  color: #3a4a2e;
+  margin-bottom: 6px;
+}
+
+.seating-page-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  color: #8a9070;
+  font-style: italic;
+}
+
+.seating-search-wrapper {
+  max-width: 480px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+}
+
+.seating-search-input {
+  width: 100%;
+  padding: 16px 20px;
+  border: 1.5px solid #c8d4b0;
+  border-radius: 50px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  color: #3a4a2e;
+  background: white;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+
+.seating-search-input:focus {
+  border-color: #8b9d6e;
+  box-shadow: 0 0 0 3px rgba(139,157,110,0.12);
+}
+
+.seating-search-input::placeholder {
+  color: #b5c49a;
+}
+
+.seating-results {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seating-result-item {
+  background: white;
+  border: 1px solid #e0ddd4;
+  border-radius: 14px;
+  padding: 16px 20px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: all 0.2s ease;
+}
+
+.seating-result-item:hover {
+  border-color: #b5c49a;
+  box-shadow: 0 4px 16px rgba(107,127,78,0.1);
+}
+
+.seating-result-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  color: #3a4a2e;
+  font-weight: 500;
+}
+
+.seating-result-name-ar {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  color: #6b7f4e;
+  direction: rtl;
+}
+
+.seating-result-table {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #9aad78;
+  margin-top: 4px;
+}
+
+.seating-loading {
+  text-align: center;
+  color: #9aad78;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  padding: 40px;
+}
+
+.seating-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.seating-modal {
+  background: white;
+  border-radius: 24px;
+  padding: 40px 32px 32px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.18);
+}
+
+.seating-modal-olive {
+  width: 180px;
+  opacity: 0.3;
+  margin-bottom: 12px;
+  pointer-events: none;
+}
+
+.seating-modal-welcome {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #9aad78;
+  margin-bottom: 6px;
+}
+
+.seating-modal-name {
+  font-family: 'Great Vibes', cursive;
+  font-size: 2.8rem;
+  color: #3a4a2e;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.seating-modal-name-ar {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  color: #6b7f4e;
+  direction: rtl;
+  margin-bottom: 20px;
+}
+
+.seating-modal-table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f5f9f0;
+  border: 1px solid #c8d4b0;
+  border-radius: 14px;
+  padding: 16px 24px;
+  margin: 16px 0;
+}
+
+.seating-modal-table-label {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #9aad78;
+  margin-bottom: 4px;
+}
+
+.seating-modal-table-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 500;
+  color: #3a4a2e;
+}
+
+.seating-modal-map {
+  width: 100%;
+  border-radius: 12px;
+  margin: 12px 0;
+  border: 1px solid #e0ddd4;
+}
+
+.seating-modal-close {
+  margin-top: 8px;
+  padding: 10px 28px;
+  border: 1px solid #c8d4b0;
+  background: transparent;
+  color: #6b7f4e;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.seating-modal-close:hover {
+  background: #f5f9f0;
+  border-color: #8b9d6e;
+}
+.seating-modal-table-type {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #b5c49a;
+  margin-top: 4px;
+}

@@ -3,6 +3,7 @@
   import { Lock, Eye, EyeOff, Check, X, UserPlus, Users, Link2, Copy, CheckCircle, Search, Filter, Heart } from 'lucide-react'
   import './AdminPage.css'
   import { supabase } from '../supabase'
+  import SeatingChart from '../components/SeatingChart'
 
   const generatedGuestsStorageKey = 'olivekimi-generated-guests'
 
@@ -101,6 +102,7 @@
     const [generatedGuests, setGeneratedGuests] = useState([])
     const [newGuestSide, setNewGuestSide] = useState('bride')
     const [showGeneratedList, setShowGeneratedList] = useState(true)
+    const [activeTab, setActiveTab] = useState('guests')
     
 
     // Fetch invites from backend and merge with locally generated ones
@@ -344,9 +346,14 @@
             </button>
           </div>
         </header>
+         <div className="admin-tabs">
+      <button className={activeTab === 'guests' ? 'active' : ''} onClick={() => setActiveTab('guests')}>Guests</button>
+      <button className={activeTab === 'seating' ? 'active' : ''} onClick={() => setActiveTab('seating')}>Seating Chart</button>
+    </div>
 
-        {/* Stats Cards */}
-        <section className="stats-section">
+        {activeTab === 'guests' && <>
+      {/* Stats Cards */}
+      <section className="stats-section">
           <div className="stats-grid">
             <motion.div 
               className="stat-card total"
@@ -755,9 +762,13 @@
               </motion.div>
             </motion.div>
           )}
-        </AnimatePresence>
-      </div>
-    )
-  }
+       </AnimatePresence>
+      </>}
 
-  export default AdminPage
+      {activeTab === 'seating' && <SeatingChart guests={guests} onUpdate={fetchInvites} />}
+
+    </div>
+  )
+}
+
+export default AdminPage
