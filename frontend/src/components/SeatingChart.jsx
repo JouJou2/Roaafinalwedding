@@ -15,7 +15,6 @@ const TABLE_W = 70
 const TABLE_H = 45
 const CIRC_R = 35
 
-// --- Supabase settings helpers ---
 const getSetting = async (key) => {
   const { data } = await supabase.from('settings').select('value').eq('key', key).single()
   return data?.value ?? null
@@ -35,9 +34,8 @@ export default function SeatingChart({ guests, onUpdate }) {
   const [saving, setSaving] = useState(false)
   const [selectedTable, setSelectedTable] = useState(null)
   const [loading, setLoading] = useState(true)
-  const tableDragOffset = useRef({x:0,y:0})
+  const tableDragOffset = useRef({ x: 0, y: 0 })
 
-  // Load persisted settings from Supabase on mount
   useEffect(() => {
     const loadSettings = async () => {
       setLoading(true)
@@ -45,9 +43,7 @@ export default function SeatingChart({ guests, onUpdate }) {
         getSetting('seating-table-positions'),
         getSetting('seating-bg')
       ])
-      if (posJson) {
-        try { setTablePositions(JSON.parse(posJson)) } catch {}
-      }
+      if (posJson) { try { setTablePositions(JSON.parse(posJson)) } catch {} }
       if (bg) setBgImage(bg)
       setLoading(false)
     }
@@ -134,47 +130,155 @@ export default function SeatingChart({ guests, onUpdate }) {
 
   const maxSeats = (n) => CIRC_TABLES.includes(n) ? 10 : 8
   const isCirc = (n) => CIRC_TABLES.includes(n)
+  const getRotation = (n) => {
+    if (CIRC_TABLES.includes(n)) return 'none'
+    if ([9,10,11,12].includes(n)) return 'rotate(-45deg)'
+    return 'rotate(45deg)'
+  }
+
+  const totalReal = guests.filter(g => g.inviteType === 'real').length
+  const assigned = guests.filter(g => g.inviteType === 'real' && g.tableNumber).length
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--olive-medium)' }}>Loading seating chart...</div>
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        height: '300px', color: 'var(--olive-medium)',
+        fontFamily: 'var(--font-sans)', letterSpacing: '0.1em', fontSize: '13px'
+      }}>
+        Loading seating chart…
+      </div>
+    )
   }
 
   return (
-    <div className="seating-chart-wrapper">
-      <div className="seating-toolbar">
-        <span className="seating-toolbar-title">Seating Chart</span>
-        <label className="seating-upload-btn">
-          <input type="file" accept="image/*" onChange={handleBgUpload} style={{display:'none'}} />
-          Upload Venue Image
-        </label>
-        {bgImage && <button className="seating-clear-bg" onClick={handleClearBg}>Clear Image</button>}
-        {saving && <span className="seating-saving">Saving...</span>}
+    <div style={{ padding: '32px 40px', boxSizing: 'border-box', maxWidth: '100%' }}>
+
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: '24px', flexWrap: 'wrap', gap: '12px'
+      }}>
+        <div>
+          <h2 style={{
+            margin: 0, fontFamily: 'var(--font-serif)', fontSize: '26px',
+            fontWeight: 600, color: 'var(--olive-dark)', letterSpacing: '0.02em'
+          }}>
+            Seating Chart
+          </h2>
+          <p style={{
+            margin: '4px 0 0', fontFamily: 'var(--font-sans)', fontSize: '12px',
+            color: 'var(--soft-gray)', letterSpacing: '0.08em', textTransform: 'uppercase'
+          }}>
+            {assigned} of {totalReal} guests placed
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {saving && (
+            <span style={{
+              fontFamily: 'var(--font-sans)', fontSize: '12px',
+              color: 'var(--olive-medium)', letterSpacing: '0.06em'
+            }}>
+              Saving…
+            </span>
+          )}
+          <label style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            padding: '8px 16px', borderRadius: '6px', cursor: 'pointer',
+            border: '1.5px solid var(--olive-pale)', backgroundColor: 'var(--warm-white)',
+            fontFamily: 'var(--font-sans)', fontSize: '12px', letterSpacing: '0.08em',
+            color: 'var(--olive-dark)', textTransform: 'uppercase', fontWeight: 600,
+            transition: 'background 0.2s'
+          }}>
+            <input type="file" accept="image/*" onChange={handleBgUpload} style={{ display: 'none' }} />
+            ↑ Upload Floor Plan
+          </label>
+          {bgImage && (
+            <button onClick={handleClearBg} style={{
+              padding: '8px 14px', borderRadius: '6px', cursor: 'pointer',
+              border: '1.5px solid #ddd', backgroundColor: 'transparent',
+              fontFamily: 'var(--font-sans)', fontSize: '12px', letterSpacing: '0.08em',
+              color: 'var(--soft-gray)', textTransform: 'uppercase'
+            }}>
+              Clear Image
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="seating-layout">
-        <div className="seating-sidebar">
-          <div className="seating-sidebar-title">Unassigned ({unassigned.length})</div>
-          <div className="seating-unassigned-list">
+      {/* Thin divider */}
+      <div style={{ height: '1px', backgroundColor: 'var(--olive-wash)', marginBottom: '24px' }} />
+
+      {/* Main layout */}
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+
+        {/* Sidebar */}
+        <div style={{
+          width: '200px', flexShrink: 0,
+          backgroundColor: 'var(--warm-white)',
+          border: '1.5px solid var(--olive-wash)',
+          borderRadius: '10px', overflow: 'hidden'
+        }}>
+          <div style={{
+            padding: '12px 16px',
+            borderBottom: '1px solid var(--olive-wash)',
+            backgroundColor: 'var(--cream)',
+            fontFamily: 'var(--font-sans)', fontSize: '11px',
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: 'var(--olive-medium)', fontWeight: 600
+          }}>
+            Unassigned · {unassigned.length}
+          </div>
+          <div style={{ maxHeight: '520px', overflowY: 'auto', padding: '10px 10px' }}>
             {unassigned.map(g => (
               <div
                 key={g.token}
-                className="seating-guest-pill"
                 draggable
                 onDragStart={() => setDraggingGuest(g)}
                 onDragEnd={() => setDraggingGuest(null)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '7px 10px', marginBottom: '5px',
+                  borderRadius: '6px', cursor: 'grab',
+                  backgroundColor: 'var(--cream)',
+                  border: '1px solid var(--olive-wash)',
+                  fontFamily: 'var(--font-sans)', fontSize: '12px',
+                  color: 'var(--charcoal)', letterSpacing: '0.02em',
+                  transition: 'background 0.15s'
+                }}
               >
-                <span className="seating-pill-dot" />
+                <span style={{
+                  width: '6px', height: '6px', borderRadius: '50%',
+                  backgroundColor: 'var(--olive-medium)', flexShrink: 0
+                }} />
                 {g.nameEn || g.name}
               </div>
             ))}
-            {unassigned.length === 0 && <div className="seating-all-assigned">All guests assigned!</div>}
+            {unassigned.length === 0 && (
+              <div style={{
+                padding: '20px 10px', textAlign: 'center',
+                fontFamily: 'var(--font-sans)', fontSize: '12px',
+                color: 'var(--soft-gray)', letterSpacing: '0.06em'
+              }}>
+                All guests placed ✓
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Canvas */}
         <div
-          className="seating-canvas"
           ref={canvasRef}
-          style={{ backgroundImage: bgImage ? `url(${bgImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}
+          style={{
+            flex: 1, height: '580px', position: 'relative',
+            borderRadius: '10px', overflow: 'hidden',
+            border: '1.5px solid var(--olive-wash)',
+            backgroundColor: bgImage ? 'transparent' : 'var(--cream)',
+            backgroundImage: bgImage ? `url(${bgImage})` : `radial-gradient(circle, var(--olive-wash) 1px, transparent 1px)`,
+            backgroundSize: bgImage ? 'cover' : '28px 28px',
+            backgroundPosition: bgImage ? 'center' : '0 0',
+          }}
         >
           {[1,2,3,4,5,6,7,8,9,10,11,12,13].map(n => {
             const pos = tablePositions[n]
@@ -182,21 +286,40 @@ export default function SeatingChart({ guests, onUpdate }) {
             const tGuests = getTableGuests(n)
             const full = tGuests.length >= maxSeats(n)
             const isOver = dragOver === n
-            const w = circ ? CIRC_R*2 : TABLE_W
-            const h = circ ? CIRC_R*2 : TABLE_H
+            const isSelected = selectedTable === n
+            const w = circ ? CIRC_R * 2 : TABLE_W
+            const h = circ ? CIRC_R * 2 : TABLE_H
 
             return (
               <div
                 key={n}
-                className={`seating-table ${circ ? 'circ' : 'rect'} ${full ? 'full' : ''} ${isOver ? 'drag-over' : ''} ${selectedTable === n ? 'selected' : ''}`}
                 style={{
-                  left: pos.x,
-                  top: pos.y,
-                  width: w,
-                  height: h,
+                  position: 'absolute',
+                  left: pos.x, top: pos.y,
+                  width: w, height: h,
                   borderRadius: circ ? '50%' : '8px',
-                  transform: n >= 9 && n <= 12 ? 'rotate(-45deg)' : 'rotate(45deg)',
-                  transformOrigin: 'center'
+                  transform: getRotation(n),
+                  transformOrigin: 'center',
+                  cursor: 'grab',
+                  backgroundColor: isSelected
+                    ? 'var(--olive-dark)'
+                    : full
+                    ? '#c8a96e22'
+                    : isOver
+                    ? 'var(--olive-light)'
+                    : 'var(--olive-medium)',
+                  border: isSelected
+                    ? '2px solid var(--gold)'
+                    : isOver
+                    ? '2px solid var(--olive-dark)'
+                    : full
+                    ? '2px solid var(--gold)'
+                    : '2px solid var(--olive-dark)',
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  userSelect: 'none',
+                  boxShadow: isSelected ? '0 0 0 3px var(--gold)44' : '0 2px 6px rgba(0,0,0,0.15)',
+                  transition: 'background 0.15s, box-shadow 0.15s'
                 }}
                 onMouseDown={(e) => handleTableMouseDown(e, n)}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(n) }}
@@ -208,34 +331,224 @@ export default function SeatingChart({ guests, onUpdate }) {
                 }}
                 onClick={() => setSelectedTable(selectedTable === n ? null : n)}
               >
-                <span className="st-num">T{n}</span>
-                <span className="st-count">{tGuests.length}/{maxSeats(n)}</span>
+                <span style={{
+                  fontFamily: 'var(--font-sans)', fontSize: '11px', fontWeight: 700,
+                  color: full && !isSelected ? 'var(--gold)' : 'var(--warm-white)',
+                  letterSpacing: '0.04em',
+                  transform: getRotation(n) !== 'none' ? `rotate(${[9,10,11,12].includes(n) ? '45deg' : '-45deg'})` : 'none'
+                }}>
+                  T{n}
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-sans)', fontSize: '9px',
+                  color: full && !isSelected ? 'var(--gold)' : 'rgba(255,255,255,0.75)',
+                  letterSpacing: '0.03em',
+                  transform: getRotation(n) !== 'none' ? `rotate(${[9,10,11,12].includes(n) ? '45deg' : '-45deg'})` : 'none'
+                }}>
+                  {tGuests.length}/{maxSeats(n)}
+                </span>
               </div>
             )
           })}
         </div>
 
-        <div className="seating-table-panel">
+        {/* Right panel */}
+        <div style={{
+          width: '200px', flexShrink: 0,
+          backgroundColor: 'var(--warm-white)',
+          border: '1.5px solid var(--olive-wash)',
+          borderRadius: '10px', overflow: 'hidden',
+          minHeight: '200px'
+        }}>
           {selectedTable ? (
             <>
-              <div className="seating-panel-title">Table {selectedTable}</div>
-              <div className="seating-panel-type">{isCirc(selectedTable) ? 'Round · 10 seats' : 'Rectangular · 8 seats'}</div>
-              <div className="seating-panel-guests">
+              <div style={{
+                padding: '12px 16px',
+                borderBottom: '1px solid var(--olive-wash)',
+                backgroundColor: 'var(--cream)',
+              }}>
+                <div style={{
+                  fontFamily: 'var(--font-serif)', fontSize: '18px',
+                  fontWeight: 600, color: 'var(--olive-dark)'
+                }}>
+                  Table {selectedTable}
+                </div>
+                <div style={{
+                  fontFamily: 'var(--font-sans)', fontSize: '11px',
+                  color: 'var(--soft-gray)', letterSpacing: '0.08em',
+                  textTransform: 'uppercase', marginTop: '2px'
+                }}>
+                  {isCirc(selectedTable) ? 'Round · 10 seats' : 'Rectangular · 8 seats'}
+                </div>
+              </div>
+
+              <div style={{ padding: '10px', maxHeight: '380px', overflowY: 'auto' }}>
                 {getTableGuests(selectedTable).map(g => (
-                  <div key={g.token} className="seating-panel-guest">
-                    <span>{g.nameEn || g.name}</span>
-                    <button onClick={() => unassignGuest(g.token)}>✕</button>
+                  <div key={g.token} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '7px 10px', marginBottom: '5px',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--cream)',
+                    border: '1px solid var(--olive-wash)',
+                  }}>
+                    <span style={{
+                      fontFamily: 'var(--font-sans)', fontSize: '12px',
+                      color: 'var(--charcoal)', flex: 1, marginRight: '6px'
+                    }}>
+                      {g.nameEn || g.name}
+                    </span>
+                    <button onClick={() => unassignGuest(g.token)} style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'var(--soft-gray)', fontSize: '13px', padding: '0 2px',
+                      lineHeight: 1, flexShrink: 0
+                    }}>✕</button>
                   </div>
                 ))}
-                {getTableGuests(selectedTable).length === 0 && <div className="seating-panel-empty">No guests yet</div>}
+                {getTableGuests(selectedTable).length === 0 && (
+                  <div style={{
+                    padding: '20px 10px', textAlign: 'center',
+                    fontFamily: 'var(--font-sans)', fontSize: '12px',
+                    color: 'var(--soft-gray)', letterSpacing: '0.06em'
+                  }}>
+                    No guests yet
+                  </div>
+                )}
               </div>
-              <button className="seating-panel-close" onClick={() => setSelectedTable(null)}>Close</button>
+
+              <div style={{ padding: '10px 10px 14px' }}>
+                <button onClick={() => setSelectedTable(null)} style={{
+                  width: '100%', padding: '8px', borderRadius: '6px',
+                  border: '1.5px solid var(--olive-pale)',
+                  backgroundColor: 'transparent', cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)', fontSize: '11px',
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  color: 'var(--soft-gray)'
+                }}>
+                  Deselect
+                </button>
+              </div>
             </>
           ) : (
-            <div className="seating-panel-empty" style={{ marginTop: '20px' }}>Click a table to see guests</div>
+            <div style={{
+              padding: '30px 16px', textAlign: 'center',
+              fontFamily: 'var(--font-sans)', fontSize: '12px',
+              color: 'var(--soft-gray)', letterSpacing: '0.06em',
+              lineHeight: 1.6
+            }}>
+              Click a table to view & manage guests
+            </div>
           )}
         </div>
+
       </div>
+
+      {/* ── Guest Assignment Summary (card grid) ── */}
+      <div style={{ marginTop: '40px' }}>
+        <div style={{ height: '1px', backgroundColor: 'var(--olive-wash)', marginBottom: '28px' }} />
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '8px' }}>
+          <h3 style={{
+            margin: 0, fontFamily: 'var(--font-serif)', fontSize: '20px',
+            fontWeight: 600, color: 'var(--olive-dark)', letterSpacing: '0.02em'
+          }}>
+            Guest Assignment Summary
+          </h3>
+          <span style={{
+            fontFamily: 'var(--font-sans)', fontSize: '11px',
+            color: 'var(--soft-gray)', letterSpacing: '0.08em', textTransform: 'uppercase'
+          }}>
+            {guests.filter(g => g.inviteType === 'real' && g.tableNumber).length} of {guests.filter(g => g.inviteType === 'real').length} placed
+          </span>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gap: '14px'
+        }}>
+          {[1,2,3,4,5,6,7,8,9,10,11,12,13].map(n => {
+            const tGuests = getTableGuests(n)
+            const seats = maxSeats(n)
+            const full = tGuests.length >= seats
+            const empty = tGuests.length === 0
+
+            return (
+              <div key={n} style={{
+                borderRadius: '10px',
+                border: `1.5px solid ${full ? 'var(--gold)' : 'var(--olive-wash)'}`,
+                backgroundColor: 'var(--warm-white)',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '10px 14px',
+                  backgroundColor: full ? '#c8a96e18' : 'var(--cream)',
+                  borderBottom: `1px solid ${full ? '#c8a96e44' : 'var(--olive-wash)'}`
+                }}>
+                  <div>
+                    <span style={{
+                      fontFamily: 'var(--font-sans)', fontSize: '14px',
+                      fontWeight: 700, color: 'var(--olive-dark)', letterSpacing: '0.04em'
+                    }}>
+                      Table {n}
+                    </span>
+                    <span style={{
+                      marginLeft: '8px',
+                      fontFamily: 'var(--font-sans)', fontSize: '10px',
+                      color: 'var(--soft-gray)', letterSpacing: '0.06em', textTransform: 'uppercase'
+                    }}>
+                      {isCirc(n) ? 'Round' : 'Rect'}
+                    </span>
+                  </div>
+                  <span style={{
+                    fontFamily: 'var(--font-sans)', fontSize: '11px', fontWeight: 600,
+                    color: full ? 'var(--gold)' : 'var(--olive-medium)',
+                    letterSpacing: '0.04em'
+                  }}>
+                    {tGuests.length}/{seats}
+                  </span>
+                </div>
+
+                <div style={{ padding: '10px 14px' }}>
+                  {empty ? (
+                    <span style={{
+                      fontFamily: 'var(--font-sans)', fontSize: '12px',
+                      color: 'var(--soft-gray)', fontStyle: 'italic'
+                    }}>
+                      Empty
+                    </span>
+                  ) : (
+                    tGuests.map((g, i) => (
+                      <div key={g.token} style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        paddingTop: i === 0 ? 0 : '7px',
+                        marginTop: i === 0 ? 0 : '7px',
+                        borderTop: i === 0 ? 'none' : '1px solid var(--olive-wash)'
+                      }}>
+                        <span style={{
+                          width: '5px', height: '5px', borderRadius: '50%',
+                          backgroundColor: 'var(--olive-pale)', flexShrink: 0
+                        }} />
+                        <span style={{
+                          fontFamily: 'var(--font-sans)', fontSize: '12px',
+                          color: 'var(--charcoal)', lineHeight: 1.3
+                        }}>
+                          {g.nameEn || g.name}
+                          {g.nameAr && (
+                            <span style={{ display: 'block', fontSize: '11px', color: 'var(--soft-gray)', direction: 'rtl' }}>
+                              {g.nameAr}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
     </div>
   )
 }
