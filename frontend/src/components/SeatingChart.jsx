@@ -15,25 +15,51 @@ const TABLE_W = 70
 const TABLE_H = 45
 const CIRC_R = 35
 
+// --- Supabase settings helpers ---
+const getSetting = async (key) => {
+  const { data } = await supabase.from('settings').select('value').eq('key', key).single()
+  return data?.value ?? null
+}
+
+const setSetting = async (key, value) => {
+  await supabase.from('settings').upsert({ key, value }, { onConflict: 'key' })
+}
+
 export default function SeatingChart({ guests, onUpdate }) {
   const canvasRef = useRef(null)
-  const [tablePositions, setTablePositions] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('seating-table-positions')) || defaultTablePositions } catch { return defaultTablePositions }
-  })
+  const [tablePositions, setTablePositions] = useState(defaultTablePositions)
   const [draggingTable, setDraggingTable] = useState(null)
   const [draggingGuest, setDraggingGuest] = useState(null)
   const [dragOver, setDragOver] = useState(null)
-  const [bgImage, setBgImage] = useState(() => localStorage.getItem('seating-bg') || null)
+  const [bgImage, setBgImage] = useState(null)
   const [saving, setSaving] = useState(false)
   const [selectedTable, setSelectedTable] = useState(null)
+  const [loading, setLoading] = useState(true)
   const tableDragOffset = useRef({x:0,y:0})
 
-  const unassigned = guests.filter(g => !g.tableNumber)
-  const getTableGuests = (n) => guests.filter(g => g.tableNumber === n)
+  // Load persisted settings from Supabase on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      setLoading(true)
+      const [posJson, bg] = await Promise.all([
+        getSetting('seating-table-positions'),
+        getSetting('seating-bg')
+      ])
+      if (posJson) {
+        try { setTablePositions(JSON.parse(posJson)) } catch {}
+      }
+      if (bg) setBgImage(bg)
+      setLoading(false)
+    }
+    loadSettings()
+  }, [])
 
-  const saveTablePositions = (pos) => {
+  const unassigned = guests.filter(g => g.rsvpStatus === 'yes' && !g.tableNumber)
+  const getTableGuests = (n) => guests.filter(g => g.rsvpStatus === 'yes' && g.tableNumber === n)
+
+  const saveTablePositions = async (pos) => {
     setTablePositions(pos)
-    localStorage.setItem('seating-table-positions', JSON.stringify(pos))
+    await setSetting('seating-table-positions', JSON.stringify(pos))
   }
 
   const assignGuest = async (token, tableNumber) => {
@@ -50,15 +76,25 @@ export default function SeatingChart({ guests, onUpdate }) {
     setSaving(false)
   }
 
-  const handleBgUpload = (e) => {
+  const handleBgUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
-      setBgImage(ev.target.result)
-      localStorage.setItem('seating-bg', ev.target.result)
+    reader.onload = async (ev) => {
+      const base64 = ev.target.result
+      setBgImage(base64)
+      setSaving(true)
+      await setSetting('seating-bg', base64)
+      setSaving(false)
     }
     reader.readAsDataURL(file)
+  }
+
+  const handleClearBg = async () => {
+    setBgImage(null)
+    setSaving(true)
+    await setSetting('seating-bg', '')
+    setSaving(false)
   }
 
   const handleTableMouseDown = (e, tableNum) => {
@@ -99,6 +135,10 @@ export default function SeatingChart({ guests, onUpdate }) {
   const maxSeats = (n) => CIRC_TABLES.includes(n) ? 10 : 8
   const isCirc = (n) => CIRC_TABLES.includes(n)
 
+  if (loading) {
+    return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--olive-medium)' }}>Loading seating chart...</div>
+  }
+
   return (
     <div className="seating-chart-wrapper">
       <div className="seating-toolbar">
@@ -107,7 +147,7 @@ export default function SeatingChart({ guests, onUpdate }) {
           <input type="file" accept="image/*" onChange={handleBgUpload} style={{display:'none'}} />
           Upload Venue Image
         </label>
-        {bgImage && <button className="seating-clear-bg" onClick={() => { setBgImage(null); localStorage.removeItem('seating-bg') }}>Clear Image</button>}
+        {bgImage && <button className="seating-clear-bg" onClick={handleClearBg}>Clear Image</button>}
         {saving && <span className="seating-saving">Saving...</span>}
       </div>
 
@@ -150,14 +190,14 @@ export default function SeatingChart({ guests, onUpdate }) {
                 key={n}
                 className={`seating-table ${circ ? 'circ' : 'rect'} ${full ? 'full' : ''} ${isOver ? 'drag-over' : ''} ${selectedTable === n ? 'selected' : ''}`}
                 style={{
-  left: pos.x,
-  top: pos.y,
-  width: w,
-  height: h,
-  borderRadius: circ ? '50%' : '8px',
-  transform: 'rotate(45deg)',
-  transformOrigin: 'center'
-}}
+                  left: pos.x,
+                  top: pos.y,
+                  width: w,
+                  height: h,
+                  borderRadius: circ ? '50%' : '8px',
+                  transform: 'rotate(45deg)',
+                  transformOrigin: 'center'
+                }}
                 onMouseDown={(e) => handleTableMouseDown(e, n)}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(n) }}
                 onDragLeave={() => setDragOver(null)}
@@ -176,25 +216,25 @@ export default function SeatingChart({ guests, onUpdate }) {
         </div>
 
         <div className="seating-table-panel">
-  {selectedTable ? (
-    <>
-      <div className="seating-panel-title">Table {selectedTable}</div>
-      <div className="seating-panel-type">{isCirc(selectedTable) ? 'Round · 10 seats' : 'Rectangular · 8 seats'}</div>
-      <div className="seating-panel-guests">
-        {getTableGuests(selectedTable).map(g => (
-          <div key={g.token} className="seating-panel-guest">
-            <span>{g.nameEn || g.name}</span>
-            <button onClick={() => unassignGuest(g.token)}>✕</button>
-          </div>
-        ))}
-        {getTableGuests(selectedTable).length === 0 && <div className="seating-panel-empty">No guests yet</div>}
-      </div>
-      <button className="seating-panel-close" onClick={() => setSelectedTable(null)}>Close</button>
-    </>
-  ) : (
-    <div className="seating-panel-empty" style={{ marginTop: '20px' }}>Click a table to see guests</div>
-  )}
-</div>
+          {selectedTable ? (
+            <>
+              <div className="seating-panel-title">Table {selectedTable}</div>
+              <div className="seating-panel-type">{isCirc(selectedTable) ? 'Round · 10 seats' : 'Rectangular · 8 seats'}</div>
+              <div className="seating-panel-guests">
+                {getTableGuests(selectedTable).map(g => (
+                  <div key={g.token} className="seating-panel-guest">
+                    <span>{g.nameEn || g.name}</span>
+                    <button onClick={() => unassignGuest(g.token)}>✕</button>
+                  </div>
+                ))}
+                {getTableGuests(selectedTable).length === 0 && <div className="seating-panel-empty">No guests yet</div>}
+              </div>
+              <button className="seating-panel-close" onClick={() => setSelectedTable(null)}>Close</button>
+            </>
+          ) : (
+            <div className="seating-panel-empty" style={{ marginTop: '20px' }}>Click a table to see guests</div>
+          )}
+        </div>
       </div>
     </div>
   )
