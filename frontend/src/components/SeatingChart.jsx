@@ -54,8 +54,8 @@ export default function SeatingChart({ guests, onUpdate }) {
     loadSettings()
   }, [])
 
-  const unassigned = guests.filter(g => g.rsvpStatus === 'yes' && !g.tableNumber)
-  const getTableGuests = (n) => guests.filter(g => g.rsvpStatus === 'yes' && g.tableNumber === n)
+  const unassigned = guests.filter(g => g.inviteType === 'real' && !g.tableNumber)
+  const getTableGuests = (n) => guests.filter(g => g.inviteType === 'real' && g.tableNumber === n)
 
   const saveTablePositions = async (pos) => {
     setTablePositions(pos)
@@ -195,7 +195,7 @@ export default function SeatingChart({ guests, onUpdate }) {
                   width: w,
                   height: h,
                   borderRadius: circ ? '50%' : '8px',
-                  transform: 'rotate(45deg)',
+                  transform: n >= 9 && n <= 12 ? 'rotate(-45deg)' : 'rotate(45deg)',
                   transformOrigin: 'center'
                 }}
                 onMouseDown={(e) => handleTableMouseDown(e, n)}
