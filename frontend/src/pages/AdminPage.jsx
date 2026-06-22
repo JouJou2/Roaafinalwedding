@@ -4,6 +4,7 @@
   import './AdminPage.css'
   import { supabase } from '../supabase'
   import SeatingChart from '../components/SeatingChart'
+  import PhotoGallery from '../components/PhotoGallery'
 
   const generatedGuestsStorageKey = 'olivekimi-generated-guests'
 
@@ -349,6 +350,7 @@
          <div className="admin-tabs">
       <button className={activeTab === 'guests' ? 'active' : ''} onClick={() => setActiveTab('guests')}>Guests</button>
       <button className={activeTab === 'seating' ? 'active' : ''} onClick={() => setActiveTab('seating')}>Seating Chart</button>
+      <button className={activeTab === 'photos' ? 'active' : ''} onClick={() => setActiveTab('photos')}>Photos</button>
     </div>
 
         {activeTab === 'guests' && <>
@@ -766,6 +768,7 @@
       </>}
 
       {activeTab === 'seating' && <SeatingChart guests={guests} onUpdate={fetchInvites} />}
+      {activeTab === 'photos' && <PhotoGallery />}
 
     </div>
   )
