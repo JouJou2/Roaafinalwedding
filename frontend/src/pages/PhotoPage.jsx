@@ -59,7 +59,21 @@ export default function PhotoPage() {
 
       try {
         const formData = new FormData()
-        formData.append('image', photo.file)
+        const baked = await new Promise((resolve) => {
+  const img = new Image()
+  img.onload = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    const ctx = canvas.getContext('2d')
+    ctx.filter = 'sepia(40%) contrast(1.1) brightness(1.05) saturate(0.85)'
+    ctx.drawImage(img, 0, 0)
+    canvas.toBlob(resolve, 'image/jpeg', 0.95)
+  }
+  img.src = photo.preview
+})
+
+formData.append('image', baked)
         formData.append('key', IMGBB_KEY)
         formData.append('name', `${guestName}-${Date.now()}-${i}`)
 
@@ -163,7 +177,7 @@ export default function PhotoPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
                 {photos.map((p, i) => (
                   <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', border: '2px solid', borderColor: p.status === 'done' ? '#8b9d6e' : p.status === 'error' ? '#e63946' : '#e0ddd4' }}>
-                    <img src={p.preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                   <img src={p.preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'sepia(40%) contrast(1.1) brightness(1.05) saturate(0.85)' }} />
                     {p.status === 'done' && <div style={{ position: 'absolute', top: 4, right: 4, background: '#6b7f4e', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'white' }}>✓</div>}
                     {p.status === 'error' && <div style={{ position: 'absolute', top: 4, right: 4, background: '#e63946', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'white' }}>✕</div>}
                     {p.status === 'pending' && !uploading && (
