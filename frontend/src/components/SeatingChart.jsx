@@ -7,6 +7,22 @@ const TABLE_W = 70
 const TABLE_H = 45
 const CIRC_R = 35
 
+const TABLE_NAMES = {
+  1: 'رمّان',
+  2: 'زيتون',
+  3: 'زعفران',
+  4: 'حبق',
+  5: 'زعتر',
+  6: 'صنوبر',
+  7: 'تين',
+  8: 'ياسمين',
+  9: 'زهر اللوز',
+  10: 'زهر الليمون',
+  11: 'إكليل الجبل',
+  12: 'خرّوب',
+  13: 'حامض',
+}
+
 const defaultTablePositions = {
   1:{x:80,y:100},2:{x:240,y:100},3:{x:400,y:100},4:{x:560,y:100},
   5:{x:160,y:280},6:{x:320,y:280},7:{x:480,y:280},8:{x:640,y:280},
@@ -33,7 +49,6 @@ const maxSeats = (n) => isCirc(n) ? 10 : 8
 const tableCenterX = (n, pos) => pos.x + (isCirc(n) ? CIRC_R : TABLE_W / 2)
 const tableCenterY = (n, pos) => pos.y + (isCirc(n) ? CIRC_R : TABLE_H / 2)
 
-// Build smooth SVG path from waypoints (quadratic bezier at corners)
 function buildPath(points) {
   if (!points || points.length < 2) return ''
   if (points.length === 2) {
@@ -63,16 +78,16 @@ export default function SeatingChart({ guests, onUpdate }) {
   const canvasRef = useRef(null)
   const [tablePositions, setTablePositions] = useState(defaultTablePositions)
   const [entrancePos, setEntrancePos] = useState(defaultEntrancePos)
-  const [tablePaths, setTablePaths] = useState({}) // { [tableNum]: [{x,y},...] }
+  const [tablePaths, setTablePaths] = useState({})
   const [draggingTable, setDraggingTable] = useState(null)
   const [draggingEntrance, setDraggingEntrance] = useState(false)
-  const [draggingWaypoint, setDraggingWaypoint] = useState(null) // {tableNum, index}
+  const [draggingWaypoint, setDraggingWaypoint] = useState(null)
   const [draggingGuest, setDraggingGuest] = useState(null)
   const [dragOver, setDragOver] = useState(null)
   const [bgImage, setBgImage] = useState(null)
   const [saving, setSaving] = useState(false)
   const [selectedTable, setSelectedTable] = useState(null)
-  const [editingPathFor, setEditingPathFor] = useState(null) // tableNum being path-edited
+  const [editingPathFor, setEditingPathFor] = useState(null)
   const [loading, setLoading] = useState(true)
   const dragOffset = useRef({ x: 0, y: 0 })
 
@@ -94,8 +109,10 @@ export default function SeatingChart({ guests, onUpdate }) {
     load()
   }, [])
 
-  const unassigned = guests.filter(g => g.inviteType === 'real' && !g.tableNumber)
-  const getTableGuests = (n) => guests.filter(g => g.inviteType === 'real' && g.tableNumber === n)
+  const unassigned = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes' && !g.tableNumber)
+  const getTableGuests = (n) => guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes' && g.tableNumber === n)
+
+  const plusOnes = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes' && g.plusOneName)
 
   const saveTablePositions = async (pos) => {
     setTablePositions(pos)
@@ -142,7 +159,6 @@ export default function SeatingChart({ guests, onUpdate }) {
     return { x: e.clientX - canvas.left, y: e.clientY - canvas.top }
   }
 
-  // Canvas click — add waypoint if in path-edit mode
   const handleCanvasClick = (e) => {
     if (!editingPathFor) return
     if (e.target !== canvasRef.current && !e.target.classList?.contains?.('canvas-bg')) return
@@ -227,9 +243,8 @@ export default function SeatingChart({ guests, onUpdate }) {
     const newPaths = { ...tablePaths, [editingPathFor]: [] }
     saveTablePaths(newPaths)
   }
-
-  const totalReal = guests.filter(g => g.inviteType === 'real').length
-  const assigned = guests.filter(g => g.inviteType === 'real' && g.tableNumber).length
+const totalReal = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes').length
+  const assigned = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes' && g.tableNumber).length
 
   if (loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'300px', color:'var(--olive-medium)', fontFamily:'var(--font-sans)', fontSize:'13px', letterSpacing:'0.1em' }}>
@@ -262,7 +277,7 @@ export default function SeatingChart({ guests, onUpdate }) {
       {editingPathFor && (
         <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'12px 16px', marginBottom:'16px', borderRadius:'8px', backgroundColor:'#fff3cd', border:'1.5px solid #f0c040', flexWrap:'wrap' }}>
           <span style={{ fontFamily:'var(--font-sans)', fontSize:'12px', fontWeight:700, color:'#7a5c00', letterSpacing:'0.06em' }}>
-            ✏️ EDITING PATH — Table {editingPathFor}
+            ✏️ EDITING PATH — {TABLE_NAMES[editingPathFor]}
           </span>
           <span style={{ fontFamily:'var(--font-sans)', fontSize:'12px', color:'#7a5c00' }}>
             Click the canvas to add waypoints. Drag waypoints to adjust.
@@ -281,19 +296,44 @@ export default function SeatingChart({ guests, onUpdate }) {
       <div style={{ display:'flex', gap:'20px', alignItems:'flex-start' }}>
 
         {/* Sidebar */}
-        <div style={{ width:'200px', flexShrink:0, backgroundColor:'var(--warm-white)', border:'1.5px solid var(--olive-wash)', borderRadius:'10px', overflow:'hidden' }}>
-          <div style={{ padding:'12px 16px', borderBottom:'1px solid var(--olive-wash)', backgroundColor:'var(--cream)', fontFamily:'var(--font-sans)', fontSize:'11px', letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--olive-medium)', fontWeight:600 }}>
-            Unassigned · {unassigned.length}
+        <div style={{ width:'220px', flexShrink:0, display:'flex', flexDirection:'column', gap:'14px' }}>
+          {/* Unassigned primary guests */}
+          <div style={{ backgroundColor:'var(--warm-white)', border:'1.5px solid var(--olive-wash)', borderRadius:'10px', overflow:'hidden' }}>
+            <div style={{ padding:'12px 16px', borderBottom:'1px solid var(--olive-wash)', backgroundColor:'var(--cream)', fontFamily:'var(--font-sans)', fontSize:'11px', letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--olive-medium)', fontWeight:600 }}>
+              Unassigned · {unassigned.length}
+            </div>
+            <div style={{ maxHeight:'260px', overflowY:'auto', padding:'10px' }}>
+              {unassigned.map(g => (
+                <div key={g.token} draggable onDragStart={() => setDraggingGuest(g)} onDragEnd={() => setDraggingGuest(null)}
+                  style={{ display:'flex', alignItems:'center', gap:'8px', padding:'7px 10px', marginBottom:'5px', borderRadius:'6px', cursor:'grab', backgroundColor:'var(--cream)', border:'1px solid var(--olive-wash)', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--charcoal)' }}>
+                  <span style={{ width:'6px', height:'6px', borderRadius:'50%', backgroundColor:'var(--olive-medium)', flexShrink:0 }} />
+                  {g.nameEn || g.name}
+                </div>
+              ))}
+              {unassigned.length === 0 && <div style={{ padding:'20px 10px', textAlign:'center', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--soft-gray)' }}>All guests placed ✓</div>}
+            </div>
           </div>
-          <div style={{ maxHeight:'520px', overflowY:'auto', padding:'10px' }}>
-            {unassigned.map(g => (
-              <div key={g.token} draggable onDragStart={() => setDraggingGuest(g)} onDragEnd={() => setDraggingGuest(null)}
-                style={{ display:'flex', alignItems:'center', gap:'8px', padding:'7px 10px', marginBottom:'5px', borderRadius:'6px', cursor:'grab', backgroundColor:'var(--cream)', border:'1px solid var(--olive-wash)', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--charcoal)' }}>
-                <span style={{ width:'6px', height:'6px', borderRadius:'50%', backgroundColor:'var(--olive-medium)', flexShrink:0 }} />
-                {g.nameEn || g.name}
-              </div>
-            ))}
-            {unassigned.length === 0 && <div style={{ padding:'20px 10px', textAlign:'center', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--soft-gray)' }}>All guests placed ✓</div>}
+
+          {/* Plus-ones list */}
+          <div style={{ backgroundColor:'var(--warm-white)', border:'1.5px solid var(--olive-wash)', borderRadius:'10px', overflow:'hidden' }}>
+            <div style={{ padding:'12px 16px', borderBottom:'1px solid var(--olive-wash)', backgroundColor:'var(--cream)', fontFamily:'var(--font-sans)', fontSize:'11px', letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--olive-medium)', fontWeight:600 }}>
+              Plus-Ones · {plusOnes.length}
+            </div>
+            <div style={{ maxHeight:'240px', overflowY:'auto', padding:'10px' }}>
+              {plusOnes.map(g => (
+                <div key={g.token} draggable onDragStart={() => setDraggingGuest(g)} onDragEnd={() => setDraggingGuest(null)}
+                  style={{ display:'flex', flexDirection:'column', gap:'2px', padding:'7px 10px', marginBottom:'5px', borderRadius:'6px', cursor:'grab', backgroundColor:'var(--cream)', border:'1px solid var(--olive-wash)', fontFamily:'var(--font-sans)', fontSize:'12px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+                    <span style={{ width:'6px', height:'6px', borderRadius:'50%', backgroundColor:'#c8a96e', flexShrink:0 }} />
+                    <span style={{ color:'var(--charcoal)' }}>{g.plusOneName}</span>
+                  </div>
+                  <span style={{ fontSize:'10px', color:'var(--soft-gray)', paddingLeft:'14px' }}>
+                    via {g.nameEn || g.name}
+                  </span>
+                </div>
+              ))}
+              {plusOnes.length === 0 && <div style={{ padding:'20px 10px', textAlign:'center', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--soft-gray)' }}>No plus-ones</div>}
+            </div>
           </div>
         </div>
 
@@ -329,7 +369,7 @@ export default function SeatingChart({ guests, onUpdate }) {
             })}
           </svg>
 
-          {/* Waypoint dots (shown when editing) */}
+          {/* Waypoint dots */}
           {editingPathFor && (tablePaths[editingPathFor] || []).map((pt, i) => (
             <div key={i} onMouseDown={(e) => handleWaypointMouseDown(e, editingPathFor, i)}
               style={{ position:'absolute', left: pt.x - 8, top: pt.y - 8, width:16, height:16, borderRadius:'50%', backgroundColor: i === 0 ? '#e63946' : '#f0c040', border:'2px solid white', cursor:'grab', zIndex:8, boxShadow:'0 1px 4px rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -348,6 +388,7 @@ export default function SeatingChart({ guests, onUpdate }) {
             const isEditingThis = editingPathFor === n
             const w = circ ? CIRC_R*2 : TABLE_W
             const h = circ ? CIRC_R*2 : TABLE_H
+            const name = TABLE_NAMES[n]
             return (
               <div key={n}
                 style={{ position:'absolute', left:pos.x, top:pos.y, width:w, height:h, borderRadius: circ ? '50%' : '8px', transform:getRotation(n), transformOrigin:'center', cursor: editingPathFor ? 'default' : 'grab', backgroundColor: isEditingThis ? '#fff3cd' : isSelected ? 'var(--olive-dark)' : full ? '#c8a96e22' : isOver ? 'var(--olive-light)' : 'var(--olive-medium)', border: isEditingThis ? '2px solid #f0c040' : isSelected ? '2px solid var(--gold)' : isOver ? '2px solid var(--olive-dark)' : full ? '2px solid var(--gold)' : '2px solid var(--olive-dark)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', userSelect:'none', zIndex:4, boxShadow: isSelected ? '0 0 0 3px #c8a96e44' : '0 2px 6px rgba(0,0,0,0.15)' }}
@@ -357,8 +398,8 @@ export default function SeatingChart({ guests, onUpdate }) {
                 onDrop={(e) => { e.preventDefault(); setDragOver(null); if (draggingGuest && !full) assignGuest(draggingGuest.token, n) }}
                 onClick={(e) => { e.stopPropagation(); if (!editingPathFor) setSelectedTable(selectedTable === n ? null : n) }}
               >
-                <span style={{ fontFamily:'var(--font-sans)', fontSize:'11px', fontWeight:700, color: isEditingThis ? '#7a5c00' : full && !isSelected ? 'var(--gold)' : 'var(--warm-white)', letterSpacing:'0.04em', transform: getRotation(n) !== 'none' ? `rotate(${[9,10,11,12].includes(n) ? '45deg' : '-45deg'})` : 'none' }}>T{n}</span>
-                <span style={{ fontFamily:'var(--font-sans)', fontSize:'9px', color: isEditingThis ? '#7a5c00' : full && !isSelected ? 'var(--gold)' : 'rgba(255,255,255,0.75)', transform: getRotation(n) !== 'none' ? `rotate(${[9,10,11,12].includes(n) ? '45deg' : '-45deg'})` : 'none' }}>{tGuests.length}/{maxSeats(n)}</span>
+                <span style={{ fontFamily:'var(--font-sans)', fontSize:'10px', fontWeight:700, color: isEditingThis ? '#7a5c00' : full && !isSelected ? 'var(--gold)' : 'var(--warm-white)', letterSpacing:'0.04em', transform: getRotation(n) !== 'none' ? `rotate(${[9,10,11,12].includes(n) ? '45deg' : '-45deg'})` : 'none', whiteSpace:'nowrap', maxWidth:'90%', overflow:'hidden', textOverflow:'ellipsis' }}>{name}</span>
+                <span style={{ fontFamily:'var(--font-sans)', fontSize:'8px', color: isEditingThis ? '#7a5c00' : full && !isSelected ? 'var(--gold)' : 'rgba(255,255,255,0.75)', transform: getRotation(n) !== 'none' ? `rotate(${[9,10,11,12].includes(n) ? '45deg' : '-45deg'})` : 'none' }}>{tGuests.length}/{maxSeats(n)}</span>
               </div>
             )
           })}
@@ -376,11 +417,11 @@ export default function SeatingChart({ guests, onUpdate }) {
         </div>
 
         {/* Right panel */}
-        <div style={{ width:'200px', flexShrink:0, backgroundColor:'var(--warm-white)', border:'1.5px solid var(--olive-wash)', borderRadius:'10px', overflow:'hidden', minHeight:'200px' }}>
+        <div style={{ width:'220px', flexShrink:0, backgroundColor:'var(--warm-white)', border:'1.5px solid var(--olive-wash)', borderRadius:'10px', overflow:'hidden', minHeight:'200px' }}>
           {selectedTable ? (
             <>
               <div style={{ padding:'12px 16px', borderBottom:'1px solid var(--olive-wash)', backgroundColor:'var(--cream)' }}>
-                <div style={{ fontFamily:'var(--font-serif)', fontSize:'18px', fontWeight:600, color:'var(--olive-dark)' }}>Table {selectedTable}</div>
+                <div style={{ fontFamily:'var(--font-serif)', fontSize:'18px', fontWeight:600, color:'var(--olive-dark)' }}>{TABLE_NAMES[selectedTable]}</div>
                 <div style={{ fontFamily:'var(--font-sans)', fontSize:'11px', color:'var(--soft-gray)', letterSpacing:'0.08em', textTransform:'uppercase', marginTop:'2px' }}>{isCirc(selectedTable) ? 'Round · 10 seats' : 'Rectangular · 8 seats'}</div>
               </div>
               <div style={{ padding:'10px', maxHeight:'300px', overflowY:'auto' }}>
@@ -392,7 +433,6 @@ export default function SeatingChart({ guests, onUpdate }) {
                 ))}
                 {getTableGuests(selectedTable).length === 0 && <div style={{ padding:'16px 10px', textAlign:'center', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--soft-gray)' }}>No guests yet</div>}
               </div>
-              {/* Path edit button */}
               <div style={{ padding:'10px' }}>
                 <button onClick={() => { setEditingPathFor(editingPathFor === selectedTable ? null : selectedTable) }}
                   style={{ width:'100%', padding:'8px', borderRadius:'6px', border:'1.5px solid #f0c040', backgroundColor: editingPathFor === selectedTable ? '#fff3cd' : 'transparent', cursor:'pointer', fontFamily:'var(--font-sans)', fontSize:'11px', letterSpacing:'0.06em', textTransform:'uppercase', color:'#7a5c00', marginBottom:'6px', fontWeight: editingPathFor === selectedTable ? 700 : 400 }}>
@@ -416,7 +456,7 @@ export default function SeatingChart({ guests, onUpdate }) {
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '8px' }}>
           <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '20px', fontWeight: 600, color: 'var(--olive-dark)' }}>Guest Assignment Summary</h3>
           <span style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', color: 'var(--soft-gray)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            {guests.filter(g => g.inviteType === 'real' && g.tableNumber).length} of {guests.filter(g => g.inviteType === 'real').length} placed
+            {guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes' && g.tableNumber).length} of {guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes').length} placed
           </span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
@@ -428,7 +468,7 @@ export default function SeatingChart({ guests, onUpdate }) {
               <div key={n} style={{ borderRadius: '10px', border: `1.5px solid ${full ? 'var(--gold)' : 'var(--olive-wash)'}`, backgroundColor: 'var(--warm-white)', overflow: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: full ? '#c8a96e18' : 'var(--cream)', borderBottom: `1px solid ${full ? '#c8a96e44' : 'var(--olive-wash)'}` }}>
                   <div>
-                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 700, color: 'var(--olive-dark)' }}>Table {n}</span>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', fontWeight: 700, color: 'var(--olive-dark)' }}>{TABLE_NAMES[n]}</span>
                     <span style={{ marginLeft: '8px', fontFamily: 'var(--font-sans)', fontSize: '10px', color: 'var(--soft-gray)', textTransform: 'uppercase' }}>{isCirc(n) ? 'Round' : 'Rect'}</span>
                   </div>
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', fontWeight: 600, color: full ? 'var(--gold)' : 'var(--olive-medium)' }}>{tGuests.length}/{seats}</span>
@@ -442,6 +482,11 @@ export default function SeatingChart({ guests, onUpdate }) {
                         <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--charcoal)', lineHeight: 1.3 }}>
                           {g.nameEn || g.name}
                           {g.nameAr && <span style={{ display: 'block', fontSize: '11px', color: 'var(--soft-gray)', direction: 'rtl' }}>{g.nameAr}</span>}
+                          {g.plusOneName && (
+                            <span style={{ display: 'block', fontSize: '10px', color: 'var(--soft-gray)', fontStyle: 'italic' }}>
+                              +1 of {g.plusOneName}
+                            </span>
+                          )}
                         </span>
                       </div>
                     ))
