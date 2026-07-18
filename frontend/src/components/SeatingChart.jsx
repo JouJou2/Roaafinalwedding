@@ -74,6 +74,29 @@ function buildPath(points) {
   return d
 }
 
+// Flatten guests: expand plus-ones into their own draggable items
+function flattenGuests(guests) {
+  const flat = []
+  for (const g of guests) {
+    if (g.inviteType === 'real' && g.rsvpStatus === 'yes') {
+      flat.push({ ...g, _isPlusOne: false, _parentToken: null })
+      if (g.plusOneName) {
+        flat.push({
+          ...g,
+          token: `${g.token}:plusone`,
+          name: g.plusOneName,
+          nameEn: g.plusOneName,       // ← plus-one's own name
+          plusOneName: null,
+          tableNumber: g.plusOneTableNumber ?? null,  // ← use their OWN table field
+          _isPlusOne: true,
+          _parentToken: g.token,
+          _parentName: g.nameEn || g.name,
+        })
+      }
+    }
+  }
+  return flat
+}
 export default function SeatingChart({ guests, onUpdate }) {
   const canvasRef = useRef(null)
   const [tablePositions, setTablePositions] = useState(defaultTablePositions)
@@ -90,6 +113,9 @@ export default function SeatingChart({ guests, onUpdate }) {
   const [editingPathFor, setEditingPathFor] = useState(null)
   const [loading, setLoading] = useState(true)
   const dragOffset = useRef({ x: 0, y: 0 })
+
+  // Flatten guests for internal use
+  const flatGuests = flattenGuests(guests)
 
   useEffect(() => {
     const load = async () => {
@@ -109,10 +135,12 @@ export default function SeatingChart({ guests, onUpdate }) {
     load()
   }, [])
 
-  const unassigned = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes' && !g.tableNumber)
-  const getTableGuests = (n) => guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes' && g.tableNumber === n)
+  const unassigned = flatGuests.filter(g => !g.tableNumber)
+  const getTableGuests = (n) => flatGuests.filter(g => g.tableNumber === n)
 
-  const plusOnes = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes' && g.plusOneName)
+  // Separate primary guests and plus-ones in sidebar
+  const unassignedPrimary = unassigned.filter(g => !g._isPlusOne)
+  const unassignedPlusOnes = unassigned.filter(g => g._isPlusOne)
 
   const saveTablePositions = async (pos) => {
     setTablePositions(pos)
@@ -129,13 +157,25 @@ export default function SeatingChart({ guests, onUpdate }) {
 
   const assignGuest = async (token, tableNumber) => {
     setSaving(true)
-    await supabase.from('guests').update({ tableNumber }).eq('token', token)
+    // Handle plus-one tokens
+    if (token.includes(':plusone')) {
+      const parentToken = token.split(':plusone')[0]
+      await supabase.from('guests').update({ plusOneTableNumber: tableNumber }).eq('token', parentToken)
+    } else {
+      await supabase.from('guests').update({ tableNumber }).eq('token', token)
+    }
     onUpdate()
     setSaving(false)
   }
+  
   const unassignGuest = async (token) => {
     setSaving(true)
-    await supabase.from('guests').update({ tableNumber: null }).eq('token', token)
+    if (token.includes(':plusone')) {
+      const parentToken = token.split(':plusone')[0]
+      await supabase.from('guests').update({ plusOneTableNumber: null }).eq('token', parentToken)
+    } else {
+      await supabase.from('guests').update({ tableNumber: null }).eq('token', token)
+    }
     onUpdate()
     setSaving(false)
   }
@@ -243,8 +283,10 @@ export default function SeatingChart({ guests, onUpdate }) {
     const newPaths = { ...tablePaths, [editingPathFor]: [] }
     saveTablePaths(newPaths)
   }
-const totalReal = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes').length
-  const assigned = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes' && g.tableNumber).length
+
+  const totalReal = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes').length
+  const assigned = flatGuests.filter(g => g.tableNumber).length
+  const totalSeated = flatGuests.length
 
   if (loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'300px', color:'var(--olive-medium)', fontFamily:'var(--font-sans)', fontSize:'13px', letterSpacing:'0.1em' }}>
@@ -260,7 +302,7 @@ const totalReal = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus ===
         <div>
           <h2 style={{ margin:0, fontFamily:'var(--font-serif)', fontSize:'26px', fontWeight:600, color:'var(--olive-dark)' }}>Seating Chart</h2>
           <p style={{ margin:'4px 0 0', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--soft-gray)', letterSpacing:'0.08em', textTransform:'uppercase' }}>
-            {assigned} of {totalReal} guests placed
+            {assigned} of {totalSeated} guests placed
           </p>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:'10px', flexWrap:'wrap' }}>
@@ -300,39 +342,39 @@ const totalReal = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus ===
           {/* Unassigned primary guests */}
           <div style={{ backgroundColor:'var(--warm-white)', border:'1.5px solid var(--olive-wash)', borderRadius:'10px', overflow:'hidden' }}>
             <div style={{ padding:'12px 16px', borderBottom:'1px solid var(--olive-wash)', backgroundColor:'var(--cream)', fontFamily:'var(--font-sans)', fontSize:'11px', letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--olive-medium)', fontWeight:600 }}>
-              Unassigned · {unassigned.length}
+              Unassigned · {unassignedPrimary.length}
             </div>
             <div style={{ maxHeight:'260px', overflowY:'auto', padding:'10px' }}>
-              {unassigned.map(g => (
+              {unassignedPrimary.map(g => (
                 <div key={g.token} draggable onDragStart={() => setDraggingGuest(g)} onDragEnd={() => setDraggingGuest(null)}
                   style={{ display:'flex', alignItems:'center', gap:'8px', padding:'7px 10px', marginBottom:'5px', borderRadius:'6px', cursor:'grab', backgroundColor:'var(--cream)', border:'1px solid var(--olive-wash)', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--charcoal)' }}>
                   <span style={{ width:'6px', height:'6px', borderRadius:'50%', backgroundColor:'var(--olive-medium)', flexShrink:0 }} />
                   {g.nameEn || g.name}
                 </div>
               ))}
-              {unassigned.length === 0 && <div style={{ padding:'20px 10px', textAlign:'center', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--soft-gray)' }}>All guests placed ✓</div>}
+              {unassignedPrimary.length === 0 && <div style={{ padding:'20px 10px', textAlign:'center', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--soft-gray)' }}>All guests placed ✓</div>}
             </div>
           </div>
 
           {/* Plus-ones list */}
           <div style={{ backgroundColor:'var(--warm-white)', border:'1.5px solid var(--olive-wash)', borderRadius:'10px', overflow:'hidden' }}>
             <div style={{ padding:'12px 16px', borderBottom:'1px solid var(--olive-wash)', backgroundColor:'var(--cream)', fontFamily:'var(--font-sans)', fontSize:'11px', letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--olive-medium)', fontWeight:600 }}>
-              Plus-Ones · {plusOnes.length}
+              Plus-Ones · {unassignedPlusOnes.length}
             </div>
             <div style={{ maxHeight:'240px', overflowY:'auto', padding:'10px' }}>
-              {plusOnes.map(g => (
+              {unassignedPlusOnes.map(g => (
                 <div key={g.token} draggable onDragStart={() => setDraggingGuest(g)} onDragEnd={() => setDraggingGuest(null)}
                   style={{ display:'flex', flexDirection:'column', gap:'2px', padding:'7px 10px', marginBottom:'5px', borderRadius:'6px', cursor:'grab', backgroundColor:'var(--cream)', border:'1px solid var(--olive-wash)', fontFamily:'var(--font-sans)', fontSize:'12px' }}>
                   <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
                     <span style={{ width:'6px', height:'6px', borderRadius:'50%', backgroundColor:'#c8a96e', flexShrink:0 }} />
-                    <span style={{ color:'var(--charcoal)' }}>{g.plusOneName}</span>
+                    <span style={{ color:'var(--charcoal)' }}>{g.name}</span>
                   </div>
                   <span style={{ fontSize:'10px', color:'var(--soft-gray)', paddingLeft:'14px' }}>
-                    via {g.nameEn || g.name}
+                    via {g._parentName || g.nameEn || g.name}
                   </span>
                 </div>
               ))}
-              {plusOnes.length === 0 && <div style={{ padding:'20px 10px', textAlign:'center', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--soft-gray)' }}>No plus-ones</div>}
+              {unassignedPlusOnes.length === 0 && <div style={{ padding:'20px 10px', textAlign:'center', fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--soft-gray)' }}>No unassigned plus-ones</div>}
             </div>
           </div>
         </div>
@@ -427,7 +469,10 @@ const totalReal = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus ===
               <div style={{ padding:'10px', maxHeight:'300px', overflowY:'auto' }}>
                 {getTableGuests(selectedTable).map(g => (
                   <div key={g.token} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 10px', marginBottom:'5px', borderRadius:'6px', backgroundColor:'var(--cream)', border:'1px solid var(--olive-wash)' }}>
-                    <span style={{ fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--charcoal)', flex:1, marginRight:'6px' }}>{g.nameEn || g.name}</span>
+                    <span style={{ fontFamily:'var(--font-sans)', fontSize:'12px', color:'var(--charcoal)', flex:1, marginRight:'6px' }}>
+                      {g.nameEn || g.name}
+                      {g._isPlusOne && <span style={{ fontSize:'10px', color:'var(--soft-gray)', marginLeft:'6px' }}>(+1)</span>}
+                    </span>
                     <button onClick={() => unassignGuest(g.token)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--soft-gray)', fontSize:'13px', padding:'0 2px' }}>✕</button>
                   </div>
                 ))}
@@ -456,7 +501,7 @@ const totalReal = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus ===
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '8px' }}>
           <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: '20px', fontWeight: 600, color: 'var(--olive-dark)' }}>Guest Assignment Summary</h3>
           <span style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', color: 'var(--soft-gray)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            {guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes' && g.tableNumber).length} of {guests.filter(g => g.inviteType === 'real' && g.rsvpStatus === 'yes').length} placed
+            {flatGuests.filter(g => g.tableNumber).length} of {flatGuests.length} placed
           </span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
@@ -478,15 +523,10 @@ const totalReal = guests.filter(g => g.inviteType === 'real' && g.rsvpStatus ===
                     ? <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--soft-gray)', fontStyle: 'italic' }}>Empty</span>
                     : tGuests.map((g, i) => (
                       <div key={g.token} style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: i === 0 ? 0 : '7px', marginTop: i === 0 ? 0 : '7px', borderTop: i === 0 ? 'none' : '1px solid var(--olive-wash)' }}>
-                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--olive-pale)', flexShrink: 0 }} />
+                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: g._isPlusOne ? '#c8a96e' : 'var(--olive-pale)', flexShrink: 0 }} />
                         <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', color: 'var(--charcoal)', lineHeight: 1.3 }}>
                           {g.nameEn || g.name}
-                          {g.nameAr && <span style={{ display: 'block', fontSize: '11px', color: 'var(--soft-gray)', direction: 'rtl' }}>{g.nameAr}</span>}
-                          {g.plusOneName && (
-                            <span style={{ display: 'block', fontSize: '10px', color: 'var(--soft-gray)', fontStyle: 'italic' }}>
-                              +1 of {g.plusOneName}
-                            </span>
-                          )}
+                          {g._isPlusOne && <span style={{ fontSize:'10px', color:'var(--soft-gray)', marginLeft:'4px' }}>(+1)</span>}
                         </span>
                       </div>
                     ))
