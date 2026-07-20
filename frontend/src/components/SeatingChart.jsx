@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { supabase } from '../supabase'
 
-const CIRC_TABLES = [5,6,7,8,13]
-const TABLE_NUMS = [1,2,3,4,5,6,7,8,9,10,11,12,13]
+const CIRC_TABLES = [5,6,7,8,13,14]
+const TABLE_NUMS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 const TABLE_W = 70
 const TABLE_H = 45
 const CIRC_R = 35
@@ -21,13 +21,14 @@ const TABLE_NAMES = {
   11: 'إكليل الجبل',
   12: 'خرّوب',
   13: 'حامض',
+  14: 'نعنع',
 }
 
 const defaultTablePositions = {
   1:{x:80,y:100},2:{x:240,y:100},3:{x:400,y:100},4:{x:560,y:100},
   5:{x:160,y:280},6:{x:320,y:280},7:{x:480,y:280},8:{x:640,y:280},
   9:{x:80,y:460},10:{x:240,y:460},11:{x:400,y:460},12:{x:560,y:460},
-  13:{x:320,y:460}
+  13:{x:320,y:460},14:{x:760,y:460}
 }
 const defaultEntrancePos = { x: 320, y: 540 }
 
@@ -74,7 +75,6 @@ function buildPath(points) {
   return d
 }
 
-// Flatten guests: expand plus-ones into their own draggable items
 function flattenGuests(guests) {
   const flat = []
   for (const g of guests) {
@@ -85,9 +85,9 @@ function flattenGuests(guests) {
           ...g,
           token: `${g.token}:plusone`,
           name: g.plusOneName,
-          nameEn: g.plusOneName,       // ← plus-one's own name
+          nameEn: g.plusOneName,
           plusOneName: null,
-          tableNumber: g.plusOneTableNumber ?? null,  // ← use their OWN table field
+          tableNumber: g.plusOneTableNumber ?? null,
           _isPlusOne: true,
           _parentToken: g.token,
           _parentName: g.nameEn || g.name,
@@ -97,6 +97,7 @@ function flattenGuests(guests) {
   }
   return flat
 }
+
 export default function SeatingChart({ guests, onUpdate }) {
   const canvasRef = useRef(null)
   const [tablePositions, setTablePositions] = useState(defaultTablePositions)
@@ -114,7 +115,6 @@ export default function SeatingChart({ guests, onUpdate }) {
   const [loading, setLoading] = useState(true)
   const dragOffset = useRef({ x: 0, y: 0 })
 
-  // Flatten guests for internal use
   const flatGuests = flattenGuests(guests)
 
   useEffect(() => {
@@ -126,7 +126,7 @@ export default function SeatingChart({ guests, onUpdate }) {
         getSetting('seating-entrance-pos'),
         getSetting('seating-table-paths'),
       ])
-      if (posJson) { try { setTablePositions(JSON.parse(posJson)) } catch {} }
+      if (posJson) { try { setTablePositions(prev => ({ ...prev, ...JSON.parse(posJson) })) } catch {} }
       if (bg) setBgImage(bg)
       if (entrJson) { try { setEntrancePos(JSON.parse(entrJson)) } catch {} }
       if (pathsJson) { try { setTablePaths(JSON.parse(pathsJson)) } catch {} }
@@ -138,7 +138,6 @@ export default function SeatingChart({ guests, onUpdate }) {
   const unassigned = flatGuests.filter(g => !g.tableNumber)
   const getTableGuests = (n) => flatGuests.filter(g => g.tableNumber === n)
 
-  // Separate primary guests and plus-ones in sidebar
   const unassignedPrimary = unassigned.filter(g => !g._isPlusOne)
   const unassignedPlusOnes = unassigned.filter(g => g._isPlusOne)
 
@@ -157,7 +156,6 @@ export default function SeatingChart({ guests, onUpdate }) {
 
   const assignGuest = async (token, tableNumber) => {
     setSaving(true)
-    // Handle plus-one tokens
     if (token.includes(':plusone')) {
       const parentToken = token.split(':plusone')[0]
       await supabase.from('guests').update({ plusOneTableNumber: tableNumber }).eq('token', parentToken)
@@ -339,7 +337,6 @@ export default function SeatingChart({ guests, onUpdate }) {
 
         {/* Sidebar */}
         <div style={{ width:'220px', flexShrink:0, display:'flex', flexDirection:'column', gap:'14px' }}>
-          {/* Unassigned primary guests */}
           <div style={{ backgroundColor:'var(--warm-white)', border:'1.5px solid var(--olive-wash)', borderRadius:'10px', overflow:'hidden' }}>
             <div style={{ padding:'12px 16px', borderBottom:'1px solid var(--olive-wash)', backgroundColor:'var(--cream)', fontFamily:'var(--font-sans)', fontSize:'11px', letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--olive-medium)', fontWeight:600 }}>
               Unassigned · {unassignedPrimary.length}
@@ -356,7 +353,6 @@ export default function SeatingChart({ guests, onUpdate }) {
             </div>
           </div>
 
-          {/* Plus-ones list */}
           <div style={{ backgroundColor:'var(--warm-white)', border:'1.5px solid var(--olive-wash)', borderRadius:'10px', overflow:'hidden' }}>
             <div style={{ padding:'12px 16px', borderBottom:'1px solid var(--olive-wash)', backgroundColor:'var(--cream)', fontFamily:'var(--font-sans)', fontSize:'11px', letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--olive-medium)', fontWeight:600 }}>
               Plus-Ones · {unassignedPlusOnes.length}
@@ -385,7 +381,6 @@ export default function SeatingChart({ guests, onUpdate }) {
           onClick={handleCanvasClick}
          style={{ width:'980px', height:'700px', flexShrink:0, position:'relative', borderRadius:'10px', overflow:'hidden', border: editingPathFor ? '2px solid #f0c040' : '1.5px solid var(--olive-wash)', cursor: editingPathFor ? 'crosshair' : 'default', backgroundColor: bgImage ? 'transparent' : 'var(--cream)', backgroundImage: bgImage ? `url(${bgImage})` : `radial-gradient(circle, var(--olive-wash) 1px, transparent 1px)`, backgroundSize: bgImage ? 'cover' : '28px 28px', backgroundPosition: bgImage ? 'center' : '0 0' }}>
 
-          {/* SVG for paths */}
           <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:3 }}>
             <defs>
               <marker id="admin-arrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
@@ -411,7 +406,6 @@ export default function SeatingChart({ guests, onUpdate }) {
             })}
           </svg>
 
-          {/* Waypoint dots */}
           {editingPathFor && (tablePaths[editingPathFor] || []).map((pt, i) => (
             <div key={i} onMouseDown={(e) => handleWaypointMouseDown(e, editingPathFor, i)}
               style={{ position:'absolute', left: pt.x - 8, top: pt.y - 8, width:16, height:16, borderRadius:'50%', backgroundColor: i === 0 ? '#e63946' : '#f0c040', border:'2px solid white', cursor:'grab', zIndex:8, boxShadow:'0 1px 4px rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -419,7 +413,6 @@ export default function SeatingChart({ guests, onUpdate }) {
             </div>
           ))}
 
-          {/* Tables */}
           {TABLE_NUMS.map(n => {
             const pos = tablePositions[n]
             const circ = isCirc(n)
@@ -446,7 +439,6 @@ export default function SeatingChart({ guests, onUpdate }) {
             )
           })}
 
-          {/* Entrance Pin */}
           <div onMouseDown={handleEntranceMouseDown} title="Drag to reposition entrance"
             style={{ position:'absolute', left:entrancePos.x, top:entrancePos.y, cursor:'grab', userSelect:'none', transform:'translate(-50%, -100%)', zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', filter:'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
             <div style={{ backgroundColor:'#e63946', color:'white', borderRadius:'50% 50% 50% 0', width:'32px', height:'32px', transform:'rotate(-45deg)', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid white' }}>
