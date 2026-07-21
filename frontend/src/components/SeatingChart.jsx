@@ -21,7 +21,7 @@ const TABLE_NAMES = {
   11: 'إكليل الجبل',
   12: 'خرّوب',
   13: 'حامض',
-  14: 'حامض',
+  14: 'مشمش',
 }
 
 const defaultTablePositions = {
